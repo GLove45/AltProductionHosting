@@ -4,10 +4,30 @@ Alt Production Hosting blends the open-ended power of cPanel with the ease of WY
 
 ## Getting started
 
+### Local development
+
 1. Install dependencies in both `backend/` and `frontend/` directories (`npm install`).
-2. Copy `.env.example` (to be created) to `.env` in `backend/` and adjust secrets.
+2. Copy `backend/.env.example` to `backend/.env` and adjust secrets.
 3. Run `npm run dev` inside `backend/` and `frontend/` to start local servers.
 4. Access the UI at `http://localhost:5173`.
+
+### Ubuntu 25 server bootstrap
+
+Use [`scripts/install-ubuntu25.sh`](scripts/install-ubuntu25.sh) to provision an Ubuntu 25.x host with Node.js, MongoDB, and compiled application artifacts.
+
+```bash
+sudo ./scripts/install-ubuntu25.sh
+```
+
+The script performs the following steps:
+
+- Installs prerequisite system packages (`curl`, `git`, build tools, and OpenSSL`).
+- Adds the NodeSource repository and installs Node.js 20 LTS.
+- Adds the MongoDB Community Server 7.0 repository, installs it, and enables the `mongod` service.
+- Generates `backend/.env` from `backend/.env.example` with a random `JWT_SECRET` if the file is missing.
+- Installs project dependencies and builds both backend and frontend bundles.
+
+After running the script, configure a process manager (for example, systemd or PM2) to run `backend/dist/server/index.js` and serve the `frontend/dist` directory through your preferred web server.
 
 ## Repository layout
 
@@ -24,5 +44,6 @@ Alt Production Hosting blends the open-ended power of cPanel with the ease of WY
 - [Frontend Overview](docs/frontend-overview.md)
 - [Storage and Deployment](docs/storage-and-deployment.md)
 - [Operational Playbook](docs/operational-playbook.md)
+- [Ubuntu 25 Deployment Checklist](docs/ubuntu25-deployment.md)
 
 For the product vision captured by stakeholders, review the original [README.txt](README.txt).
