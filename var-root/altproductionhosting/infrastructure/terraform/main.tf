@@ -1,0 +1,4 @@
+// Placeholder Terraform configuration.
+
+terraform {}
+
