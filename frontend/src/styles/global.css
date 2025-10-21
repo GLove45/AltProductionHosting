@@ -1,0 +1,160 @@
+:root {
+  color-scheme: light dark;
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: #0d1117;
+  color: #f3f4f6;
+}
+
+body {
+  margin: 0;
+}
+
+.app-shell {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 100vh;
+}
+
+.navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  background-color: #111827;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.navigation a {
+  margin-right: 1rem;
+  color: #cbd5f5;
+  text-decoration: none;
+}
+
+.navigation a.active {
+  font-weight: 600;
+  color: #60a5fa;
+}
+
+.dev-assistant {
+  padding: 2rem;
+}
+
+.assistant-message {
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.4);
+  padding: 1rem;
+  border-radius: 0.75rem;
+  margin-bottom: 1rem;
+  color: #bfdbfe;
+}
+
+.spaces-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.5rem;
+}
+
+.space-card {
+  background: #111827;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.space-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.space-actions a {
+  flex: 1;
+  text-align: center;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  background: #1f2937;
+  color: #93c5fd;
+}
+
+.editor-page {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 2rem;
+}
+
+.editor-sidebar {
+  background: #111827;
+  padding: 1rem;
+  border-radius: 0.75rem;
+}
+
+.editor-sidebar button {
+  width: 100%;
+  margin-bottom: 0.5rem;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  background: #1f2937;
+  color: #f9fafb;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.widget-preview {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.widget-chip {
+  background: #1f2937;
+  padding: 0.5rem 0.75rem;
+  border-radius: 999px;
+}
+
+.files-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #111827;
+}
+
+.files-table th,
+.files-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+}
+
+.auth-page {
+  max-width: 420px;
+  margin: 3rem auto;
+  background: #111827;
+  padding: 2rem;
+  border-radius: 1rem;
+}
+
+.auth-page form {
+  display: grid;
+  gap: 1rem;
+}
+
+.auth-page label {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.auth-page input,
+.auth-page select {
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #0f172a;
+  color: #f3f4f6;
+}
+
+.auth-page button {
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  border: none;
+  background: #2563eb;
+  color: white;
+  font-weight: 600;
+}
