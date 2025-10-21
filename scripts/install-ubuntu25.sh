@@ -43,13 +43,59 @@ info() {
   echo "${LOG_PREFIX} $*"
 }
 
+warn() {
+  echo "${LOG_PREFIX} [WARN] $*" >&2
+}
+
+repo_release_exists() {
+  local repo_url="$1"
+  if curl --silent --head --fail "${repo_url}" >/dev/null 2>&1; then
+    return 0
+  fi
+  return 1
+}
+
 apt_update_once=false
 apt_update() {
   if [[ "${apt_update_once}" = false ]]; then
     info "Updating apt package index"
     export DEBIAN_FRONTEND=noninteractive
-    apt-get update -y
-    apt_update_once=true
+
+    local tmp_log
+    tmp_log="$(mktemp)"
+
+    if apt-get update -y 2>&1 | tee "${tmp_log}"; then
+      apt_update_once=true
+      rm -f "${tmp_log}"
+      return 0
+    fi
+
+    warn "apt update failed; attempting automated recovery."
+
+    local handled=false
+    if grep -q "https://repo.mongodb.org/apt/ubuntu" "${tmp_log}"; then
+      warn "Detected broken MongoDB repository; removing /etc/apt/sources.list.d/mongodb-org-7.0.list"
+      rm -f /etc/apt/sources.list.d/mongodb-org-7.0.list
+      handled=true
+    fi
+    if grep -q "https://deb.nodesource.com/node_20.x" "${tmp_log}"; then
+      warn "Detected unsupported NodeSource repository; removing /etc/apt/sources.list.d/nodesource.list"
+      rm -f /etc/apt/sources.list.d/nodesource.list
+      handled=true
+    fi
+
+    rm -f "${tmp_log}"
+
+    if [[ "${handled}" = true ]]; then
+      info "Retrying apt package index update"
+      if apt-get update -y; then
+        apt_update_once=true
+        return 0
+      fi
+    fi
+
+    warn "apt update failed and could not be automatically recovered."
+    return 1
   fi
 }
 
@@ -71,13 +117,36 @@ info "Installing prerequisite packages"
 install_packages ca-certificates curl gnupg git build-essential unzip lsb-release openssl nginx rsync
 
 if ! command -v node >/dev/null 2>&1; then
-  info "Installing Node.js 20 LTS from NodeSource"
-  NODE_KEYRING=/usr/share/keyrings/nodesource.gpg
-  curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o "${NODE_KEYRING}"
-  echo "deb [signed-by=${NODE_KEYRING}] https://deb.nodesource.com/node_20.x nodistro main" > /etc/apt/sources.list.d/nodesource.list
-  apt_update_once=false
-  apt_update
-  apt-get install -y nodejs
+  info "Installing Node.js 20 LTS"
+  NODE_ARCH="$(dpkg --print-architecture)"
+  case "${NODE_ARCH}" in
+    amd64|arm64)
+      NODE_KEYRING=/usr/share/keyrings/nodesource.gpg
+      NODE_RELEASE_URL="https://deb.nodesource.com/node_20.x/dists/nodistro/Release"
+      if repo_release_exists "${NODE_RELEASE_URL}"; then
+        curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o "${NODE_KEYRING}"
+        echo "deb [arch=${NODE_ARCH} signed-by=${NODE_KEYRING}] https://deb.nodesource.com/node_20.x nodistro main" \
+          > /etc/apt/sources.list.d/nodesource.list
+        apt_update_once=false
+        if ! apt_update; then
+          warn "apt update failed after adding NodeSource. Falling back to Ubuntu package."
+          rm -f /etc/apt/sources.list.d/nodesource.list
+        fi
+      else
+        warn "NodeSource release metadata unavailable; falling back to Ubuntu package."
+      fi
+      ;;
+    *)
+      warn "Architecture '${NODE_ARCH}' not supported by NodeSource repository; falling back to Ubuntu package."
+      ;;
+  esac
+
+  if ! command -v node >/dev/null 2>&1; then
+    apt_update
+    apt-get install -y nodejs npm
+  else
+    apt-get install -y nodejs
+  fi
 else
   info "Node.js already installed (version $(node --version))"
 fi
@@ -88,21 +157,45 @@ if ! command -v mongod >/dev/null 2>&1; then
   MONGO_KEYRING=/usr/share/keyrings/mongodb-server-7.0.gpg
   curl -fsSL https://pgp.mongodb.com/server-7.0.asc | gpg --dearmor -o "${MONGO_KEYRING}"
 
-  SUPPORTED_MONGO_CODENAMES=("jammy" "noble")
+  MONGO_LIST_FILE="/etc/apt/sources.list.d/mongodb-org-7.0.list"
+  if [[ -f "${MONGO_LIST_FILE}" ]]; then
+    warn "Removing stale MongoDB repository configuration before probing releases."
+    rm -f "${MONGO_LIST_FILE}"
+  fi
+
+  SUPPORTED_MONGO_CODENAMES=("noble" "jammy")
   TARGET_CODENAME="${UBUNTU_CODENAME:-${VERSION_CODENAME:-}}"
   if [[ -z "${TARGET_CODENAME}" ]]; then
     TARGET_CODENAME="noble"
   fi
-  if [[ ! " ${SUPPORTED_MONGO_CODENAMES[*]} " =~ " ${TARGET_CODENAME} " ]]; then
-    info "Ubuntu codename '${TARGET_CODENAME}' is not explicitly supported by MongoDB yet; falling back to 'noble'."
-    TARGET_CODENAME="noble"
-  fi
 
-  echo "deb [ arch=amd64,arm64 signed-by=${MONGO_KEYRING} ] https://repo.mongodb.org/apt/ubuntu ${TARGET_CODENAME}/mongodb-org/7.0 multiverse" > /etc/apt/sources.list.d/mongodb-org-7.0.list
-  apt_update_once=false
-  apt_update
-  apt-get install -y mongodb-org
-  systemctl enable --now mongod
+  RESOLVED_CODENAME=""
+  for CODENAME in "${TARGET_CODENAME}" "${SUPPORTED_MONGO_CODENAMES[@]}"; do
+    [[ -n "${CODENAME}" ]] || continue
+    RELEASE_URL="https://repo.mongodb.org/apt/ubuntu/dists/${CODENAME}/mongodb-org/7.0/Release"
+    if repo_release_exists "${RELEASE_URL}"; then
+      RESOLVED_CODENAME="${CODENAME}"
+      break
+    fi
+  done
+
+  if [[ -z "${RESOLVED_CODENAME}" ]]; then
+    warn "Unable to find a supported MongoDB repository for Ubuntu '${TARGET_CODENAME}'. Skipping MongoDB installation."
+  else
+    if [[ "${RESOLVED_CODENAME}" != "${TARGET_CODENAME}" ]]; then
+      warn "Using MongoDB repository for '${RESOLVED_CODENAME}' (instead of '${TARGET_CODENAME}')."
+    fi
+    echo "deb [ arch=amd64,arm64 signed-by=${MONGO_KEYRING} ] https://repo.mongodb.org/apt/ubuntu ${RESOLVED_CODENAME}/mongodb-org/7.0 multiverse" \
+      > "${MONGO_LIST_FILE}"
+    apt_update_once=false
+    if apt_update; then
+      apt-get install -y mongodb-org
+      systemctl enable --now mongod
+    else
+      warn "apt update failed after adding MongoDB repository. Removing repository configuration."
+      rm -f /etc/apt/sources.list.d/mongodb-org-7.0.list
+    fi
+  fi
 else
   info "MongoDB already installed (version $(mongod --version | head -n 1))"
 fi
