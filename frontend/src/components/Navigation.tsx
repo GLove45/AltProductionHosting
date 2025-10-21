@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 type NavigationProps = {
   devMode: boolean;
@@ -8,6 +9,7 @@ type NavigationProps = {
 
 export const Navigation = ({ devMode, onToggleDevMode }: NavigationProps) => {
   const location = useLocation();
+  const { user, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -37,12 +39,25 @@ export const Navigation = ({ devMode, onToggleDevMode }: NavigationProps) => {
         <Link to="/" className={location.pathname === '/' ? 'active' : ''}>
           Dashboard
         </Link>
-        <Link to="/login" className={location.pathname === '/login' ? 'active' : ''}>
-          Login
-        </Link>
-        <Link to="/register" className={location.pathname === '/register' ? 'active' : ''}>
-          Register
-        </Link>
+        {user ? (
+          <>
+            <span className="user-pill" aria-label="Logged in user">
+              {user.username} ({user.role})
+            </span>
+            <button type="button" className="link-button" onClick={logout}>
+              Logout
+            </button>
+          </>
+        ) : (
+          <>
+            <Link to="/login" className={location.pathname === '/login' ? 'active' : ''}>
+              Login
+            </Link>
+            <Link to="/register" className={location.pathname === '/register' ? 'active' : ''}>
+              Register
+            </Link>
+          </>
+        )}
         <label className="dev-mode-toggle">
           <input
             type="checkbox"

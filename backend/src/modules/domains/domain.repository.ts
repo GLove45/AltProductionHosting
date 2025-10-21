@@ -1,11 +1,12 @@
 import { v4 as uuid } from 'uuid';
 import { DomainEntity, DomainRegistrationInput } from './domain.types.js';
+import { DEFAULT_ADMIN_ID } from '../users/user.constants.js';
 
 const seedDomains: DomainEntity[] = [
   {
     id: 'demo-domain-1',
     name: 'altproductionsites.com',
-    userId: 'demo-user',
+    userId: DEFAULT_ADMIN_ID,
     registrarProvider: 'internal',
     status: 'active',
     verificationToken: uuid(),
@@ -16,7 +17,7 @@ const seedDomains: DomainEntity[] = [
   {
     id: 'demo-domain-2',
     name: 'altproductionstudio.io',
-    userId: 'demo-user',
+    userId: DEFAULT_ADMIN_ID,
     registrarProvider: 'cloudflare',
     status: 'active',
     verificationToken: uuid(),
@@ -27,7 +28,7 @@ const seedDomains: DomainEntity[] = [
   {
     id: 'demo-domain-3',
     name: 'altproductionlabs.dev',
-    userId: 'demo-user',
+    userId: DEFAULT_ADMIN_ID,
     registrarProvider: 'namecheap',
     status: 'pending-verification',
     verificationToken: uuid(),

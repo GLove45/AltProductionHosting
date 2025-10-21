@@ -5,6 +5,10 @@ const RegisterPage = () => {
       <p>Select a hosting plan and allocate storage limits for your projects.</p>
       <form>
         <label>
+          Username
+          <input type="text" name="username" placeholder="choose a handle" />
+        </label>
+        <label>
           Email
           <input type="email" name="email" placeholder="you@example.com" />
         </label>

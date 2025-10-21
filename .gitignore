@@ -7,6 +7,5 @@ backend/dist/*
 frontend/dist/*
 !frontend/dist/.gitkeep
 build/
-.env
 .DS_Store
 *.log

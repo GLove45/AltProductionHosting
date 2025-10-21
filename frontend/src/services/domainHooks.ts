@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from './apiClient';
-import { Domain, DomainAnalytics } from '../types/domain';
+import { Domain, DomainAnalytics, DomainRegistrarProvider } from '../types/domain';
 
 export const fetchDomains = async (userId: string): Promise<Domain[]> => {
   const { data } = await apiClient.get<Domain[]>('/domains', { params: { userId } });
@@ -25,3 +25,11 @@ export const useDomainAnalytics = (domainId: string) =>
     queryFn: () => fetchDomainAnalytics(domainId),
     enabled: !!domainId
   });
+
+export const registerDomain = async (payload: {
+  domainName: string;
+  registrarProvider: DomainRegistrarProvider;
+}): Promise<Domain> => {
+  const { data } = await apiClient.post<Domain>('/domains', payload);
+  return data;
+};

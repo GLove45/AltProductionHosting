@@ -1,10 +1,11 @@
 import { v4 as uuid } from 'uuid';
 import { HostingSpace, CreateSpaceInput, HostingFile, FileUploadInput } from './hosting.types.js';
+import { DEFAULT_ADMIN_ID } from '../users/user.constants.js';
 
 const seedSpaces: HostingSpace[] = [
   {
     id: 'demo-space-1',
-    userId: 'demo-user',
+    userId: DEFAULT_ADMIN_ID,
     domainId: 'demo-domain-1',
     name: 'Marketing Website',
     storageUsedMb: 186,
@@ -43,7 +44,7 @@ const seedSpaces: HostingSpace[] = [
   },
   {
     id: 'demo-space-2',
-    userId: 'demo-user',
+    userId: DEFAULT_ADMIN_ID,
     domainId: 'demo-domain-2',
     name: 'Developer Portal',
     storageUsedMb: 92,
@@ -73,7 +74,7 @@ const seedSpaces: HostingSpace[] = [
   },
   {
     id: 'demo-space-3',
-    userId: 'demo-user',
+    userId: DEFAULT_ADMIN_ID,
     domainId: 'demo-domain-3',
     name: 'Labs Preview',
     storageUsedMb: 24,

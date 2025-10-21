@@ -7,13 +7,17 @@ import { fetchDomainAnalytics, useUserDomains } from '../services/domainHooks';
 import { SeoServiceOverview } from '../components/SeoServiceOverview';
 import { DomainPerformancePanel } from '../components/DomainPerformancePanel';
 import { DomainAnalytics } from '../types/domain';
+import { useAuth } from '../contexts/AuthContext';
+import { DomainRegistrationForm } from '../components/DomainRegistrationForm';
+import { PasswordUpdateForm } from '../components/PasswordUpdateForm';
 
 type DashboardPageProps = {
   devMode: boolean;
 };
 
 const DashboardPage = ({ devMode }: DashboardPageProps) => {
-  const userId = 'demo-user';
+  const { user, isLoading: authLoading } = useAuth();
+  const userId = user?.id ?? '';
   const { data: spaces } = useHostingSpaces(userId);
   const {
     data: domains,
@@ -42,6 +46,23 @@ const DashboardPage = ({ devMode }: DashboardPageProps) => {
 
   const analyticsLoading = analyticsQueries.some((query) => query.isLoading);
 
+  if (authLoading) {
+    return (
+      <section className="dashboard-loading">
+        <h1>Loading your dashboard…</h1>
+      </section>
+    );
+  }
+
+  if (!user) {
+    return (
+      <section className="dashboard-loading">
+        <h1>Sign in to access your dashboard</h1>
+        <p>Use the admin credentials to review domains, hosting spaces, and analytics.</p>
+      </section>
+    );
+  }
+
   return (
     <DevAssistant devMode={devMode} message="Use the dashboard to create hosting spaces and manage domains.">
       <header>
@@ -61,6 +82,17 @@ const DashboardPage = ({ devMode }: DashboardPageProps) => {
             </div>
           </article>
         ))}
+      </section>
+
+      <section className="account-management">
+        <header className="section-header">
+          <h2>Account management</h2>
+          <p>Maintain secure access by rotating your password and registering domains.</p>
+        </header>
+        <div className="account-management-grid">
+          <PasswordUpdateForm />
+          <DomainRegistrationForm />
+        </div>
       </section>
 
       <SeoServiceOverview analytics={aggregatedAnalytics} loading={isLoadingDomains || analyticsLoading} />
