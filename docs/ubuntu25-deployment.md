@@ -1,15 +1,14 @@
 # Ubuntu 25 Deployment Checklist
 
-This guide summarizes the steps required to provision an Ubuntu 25.x server for Alt Production Hosting. Use it alongside the automation script shipped in `scripts/install-ubuntu25.sh`.
+This guide summarizes the steps required to provision an Ubuntu 25.x server for Alt Production Hosting. The automation script shipped in `scripts/install-ubuntu25.sh` now performs a full installation, including dependency setup, service provisioning, and nginx configuration for `www.altproductionhosting.com`.
 
 ## 1. Prepare the server
 
-1. Update the system and install baseline packages:
+1. Update the system packages (optional but recommended):
    ```bash
    sudo apt-get update && sudo apt-get upgrade -y
-   sudo apt-get install -y ca-certificates curl git gnupg lsb-release build-essential unzip openssl
    ```
-2. Ensure ports `4000` (API) and `5173` (default frontend dev server) are open in your firewall or security group. For production, front the backend API with a reverse proxy and serve the frontend as static files.
+2. Ensure ports `80` (nginx) and `4000` (internal API) are permitted in your firewall or security group. The installer configures nginx to listen on port 80 and proxy `/api` traffic to the backend service running on port 4000.
 
 ## 2. Run the bootstrap script
 
@@ -19,19 +18,19 @@ Execute the automated installer from the repository root:
 sudo ./scripts/install-ubuntu25.sh
 ```
 
-The script installs Node.js 20 LTS, MongoDB Community Server 7.0, project dependencies, and builds the production artifacts.
+The script installs Node.js 20 LTS, MongoDB Community Server 7.0, nginx, project dependencies, and builds the production artifacts. It also synchronizes the repository to `/opt/altproductionhosting`, creates a dedicated `altproduction` system user, and deploys the backend and frontend.
 
-## 3. Configure services
+## 3. Post-install checks
 
-After the script finishes:
+After the script finishes, perform these quick verifications:
 
-- Verify MongoDB is running: `sudo systemctl status mongod`.
-- Create a dedicated system user for the application if desired, then configure a process manager (systemd, PM2, or Supervisor) to run `node backend/dist/server/index.js`.
-- Serve `frontend/dist` using nginx, Apache, or a CDN-enabled object store. When using nginx on the same host, point the document root to the `frontend/dist` directory.
+- Confirm MongoDB is running: `sudo systemctl status mongod`.
+- Confirm the backend service is active: `sudo systemctl status altproductionhosting.service`.
+- Confirm nginx is serving the frontend: `sudo systemctl status nginx` and visit `http://www.altproductionhosting.com/`.
 
 ## 4. Environment configuration
 
-The installer copies `backend/.env.example` to `backend/.env` with a random `JWT_SECRET`. Review and adjust the following variables:
+The installer copies `backend/.env.example` to `/opt/altproductionhosting/backend/.env` with a random `JWT_SECRET`. Review and adjust the following variables (edit the file in place and restart the `altproductionhosting.service` unit afterwards):
 
 | Variable | Description |
 |----------|-------------|
