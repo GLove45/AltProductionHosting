@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { env } from '../config/env.js';
 import { registerRoutes } from '../routes/index.js';
+import { seedAdminUser } from '../modules/users/user.admin.js';
 
 const app = express();
 
@@ -15,7 +16,9 @@ app.get('/healthz', (_req, res) => {
 
 registerRoutes(app);
 
-export const startServer = () => {
+export const startServer = async () => {
+  await seedAdminUser();
+
   app.listen(env.port, () => {
     // eslint-disable-next-line no-console
     console.log(`API listening on port ${env.port}`);
@@ -23,5 +26,9 @@ export const startServer = () => {
 };
 
 if (process.env.NODE_ENV !== 'test') {
-  startServer();
+  startServer().catch((error) => {
+    // eslint-disable-next-line no-console
+    console.error('Failed to start server', error);
+    process.exit(1);
+  });
 }

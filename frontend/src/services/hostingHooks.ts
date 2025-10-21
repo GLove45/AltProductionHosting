@@ -13,7 +13,11 @@ const getSpace = async (spaceId: string): Promise<HostingSpace> => {
 };
 
 export const useHostingSpaces = (userId: string) =>
-  useQuery({ queryKey: ['hosting-spaces', userId], queryFn: () => getSpaces(userId) });
+  useQuery({
+    queryKey: ['hosting-spaces', userId],
+    queryFn: () => getSpaces(userId),
+    enabled: !!userId
+  });
 
 export const useHostingSpaceDetail = (spaceId: string) =>
   useQuery({ queryKey: ['hosting-space', spaceId], queryFn: () => getSpace(spaceId), enabled: !!spaceId });

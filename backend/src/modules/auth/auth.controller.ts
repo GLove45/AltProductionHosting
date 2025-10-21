@@ -15,7 +15,7 @@ export class AuthController {
 
   async login(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await this.service.login(req.body.email, req.body.password);
+      const result = await this.service.login(req.body.identifier ?? req.body.email, req.body.password);
       res.status(200).json(result);
     } catch (error) {
       next(error);
@@ -25,6 +25,15 @@ export class AuthController {
   async profile(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await this.service.getProfile(req.headers.authorization ?? '');
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async changePassword(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await this.service.changePassword(req.headers.authorization ?? '', req.body);
       res.status(200).json(result);
     } catch (error) {
       next(error);

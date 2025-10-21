@@ -1,12 +1,16 @@
 import { NextFunction, Request, Response } from 'express';
 import { DomainService } from './domain.service.js';
+import { AuthService } from '../auth/auth.service.js';
 
 export class DomainController {
   private service = new DomainService();
+  private auth = new AuthService();
 
   async listDomains(req: Request, res: Response, next: NextFunction) {
     try {
-      const domains = await this.service.listUserDomains(req.query.userId as string);
+      const authorization = req.headers.authorization ?? '';
+      const userId = (req.query.userId as string) || (await this.auth.getProfile(authorization)).id;
+      const domains = await this.service.listUserDomains(userId);
       res.json(domains);
     } catch (error) {
       next(error);
@@ -15,7 +19,8 @@ export class DomainController {
 
   async registerDomain(req: Request, res: Response, next: NextFunction) {
     try {
-      const domain = await this.service.registerDomain(req.body);
+      const user = await this.auth.getProfile(req.headers.authorization ?? '');
+      const domain = await this.service.registerDomainForUser(user.id, req.body);
       res.status(201).json(domain);
     } catch (error) {
       next(error);
