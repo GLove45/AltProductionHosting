@@ -6,6 +6,8 @@
 2. Start the backend API with `npm run dev` inside `backend/`.
 3. Run the frontend with `npm run dev` inside `frontend/`.
 
+For production-like Ubuntu hosts, execute the automated bootstrap script described in the [Ubuntu 25 Deployment Checklist](ubuntu25-deployment.md).
+
 Environment variables consumed by [`env.ts`](../backend/src/config/env.ts):
 
 | Variable | Default | Description |
