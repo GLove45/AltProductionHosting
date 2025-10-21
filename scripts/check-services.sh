@@ -6,6 +6,7 @@ HOST="${HOST:-localhost}"
 FRONTEND_PORT="${FRONTEND_PORT:-10083}"
 BACKEND_PORT="${BACKEND_PORT:-4000}"
 BACKEND_HEALTH_PATH="${BACKEND_HEALTH_PATH:-/healthz}"
+FRONTEND_WEB_ROOT="${FRONTEND_WEB_ROOT:-/var/www/altproductionhosting}"
 
 info() {
   printf '\n\033[1m%s\033[0m\n' "$1"
@@ -42,6 +43,30 @@ check_backend_port_config() {
   note "Backend configured to listen on port $configured_port"
   if [[ "$configured_port" == "80" ]]; then
     warn "Port 80 is already reserved on this host. Update backend PORT to avoid conflicts."
+  fi
+}
+
+check_frontend_root() {
+  info "Validating frontend web root"
+  note "Expected frontend root: $FRONTEND_WEB_ROOT"
+
+  if [[ -d "$FRONTEND_WEB_ROOT" ]]; then
+    local index_file="$FRONTEND_WEB_ROOT/index.html"
+    if [[ -f "$index_file" ]]; then
+      note "Found index.html at $index_file"
+    else
+      warn "Directory exists but index.html not found in $FRONTEND_WEB_ROOT"
+      local dist_index="$ROOT_DIR/frontend/dist/index.html"
+      if [[ -f "$dist_index" ]]; then
+        warn "Detected built frontend at $dist_index. Ensure deployment syncs files to $FRONTEND_WEB_ROOT."
+      fi
+    fi
+  else
+    warn "Frontend root directory $FRONTEND_WEB_ROOT does not exist"
+    local dist_dir="$ROOT_DIR/frontend/dist"
+    if [[ -d "$dist_dir" ]]; then
+      warn "A local build is available at $dist_dir. Deploy or update the web root path."
+    fi
   fi
 }
 
@@ -115,6 +140,7 @@ main() {
   note "Expected backend port: $BACKEND_PORT"
 
   check_backend_port_config
+  check_frontend_root
 
   info "Scanning known ports"
   check_listener 80 "default HTTP port (should remain free)"
