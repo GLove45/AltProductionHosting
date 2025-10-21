@@ -1,5 +1,6 @@
 import { DomainRepository } from './domain.repository.js';
-import { DomainEntity, DomainRegistrationInput } from './domain.types.js';
+import { getDomainAnalytics } from './domain.analytics.js';
+import { DomainAnalytics, DomainEntity, DomainRegistrationInput } from './domain.types.js';
 
 export class DomainService {
   private domains = new DomainRepository();
@@ -23,5 +24,19 @@ export class DomainService {
 
   async verifyDomain(id: string, token: string): Promise<DomainEntity> {
     return this.domains.verify(id, token);
+  }
+
+  async getDomainAnalytics(domainId: string): Promise<DomainAnalytics> {
+    const domain = await this.domains.findById(domainId);
+    if (!domain) {
+      throw new Error('Domain not found');
+    }
+
+    const analytics = getDomainAnalytics(domainId);
+    if (!analytics) {
+      throw new Error('Analytics not available for this domain');
+    }
+
+    return analytics;
   }
 }
