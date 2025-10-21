@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # Bootstrap Alt Production Hosting on Ubuntu 25.x machines.
 #
-# This script installs system dependencies, Node.js, MongoDB, and project
-# dependencies. Run it once on a fresh server (preferably with sudo/root).
+# This script installs system dependencies, Node.js, MongoDB, project
+# dependencies, configures the backend systemd service, and provisions an
+# nginx reverse proxy for www.altproductionhosting.com. Run it once on a fresh
+# server (preferably with sudo/root) and the platform will be fully deployed.
 
 set -o errexit
 set -o nounset
@@ -15,6 +17,27 @@ fi
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LOG_PREFIX="[install-ubuntu25]"
+
+APP_USER="altproduction"
+APP_GROUP="${APP_USER}"
+APP_ROOT="/opt/altproductionhosting"
+FRONTEND_WEB_ROOT="/var/www/altproductionhosting"
+DOMAIN="www.altproductionhosting.com"
+SYSTEMD_SERVICE="altproductionhosting.service"
+BACKEND_SERVICE_NAME="Alt Production Hosting Backend"
+
+ensure_directory() {
+  local dir="$1"
+  if [[ ! -d "${dir}" ]]; then
+    mkdir -p "${dir}"
+  fi
+}
+
+run_as_app() {
+  local working_dir="$1"
+  shift
+  runuser -u "${APP_USER}" -- bash -lc "cd '${working_dir}' && export PATH=/usr/local/bin:/usr/bin:/bin && $*"
+}
 
 info() {
   echo "${LOG_PREFIX} $*"
@@ -45,7 +68,7 @@ install_packages() {
 }
 
 info "Installing prerequisite packages"
-install_packages ca-certificates curl gnupg git build-essential unzip lsb-release openssl
+install_packages ca-certificates curl gnupg git build-essential unzip lsb-release openssl nginx rsync
 
 if ! command -v node >/dev/null 2>&1; then
   info "Installing Node.js 20 LTS from NodeSource"
@@ -84,10 +107,33 @@ else
   info "MongoDB already installed (version $(mongod --version | head -n 1))"
 fi
 
-ENV_FILE="${REPO_ROOT}/backend/.env"
-ENV_TEMPLATE="${REPO_ROOT}/backend/.env.example"
+ensure_directory "${APP_ROOT}"
+
+if ! id -u "${APP_USER}" >/dev/null 2>&1; then
+  info "Creating application user '${APP_USER}'"
+  useradd --system --home "${APP_ROOT}" --shell /usr/sbin/nologin --no-create-home "${APP_USER}"
+fi
+
+APP_GROUP="$(id -gn "${APP_USER}")"
+
+ensure_directory "${FRONTEND_WEB_ROOT}"
+
+info "Syncing repository to ${APP_ROOT}"
+rsync -a --delete \
+  --exclude ".git" \
+  --exclude "backend/.env" \
+  --exclude "backend/node_modules" \
+  --exclude "backend/dist" \
+  --exclude "frontend/node_modules" \
+  --exclude "frontend/dist" \
+  "${REPO_ROOT}/" "${APP_ROOT}/"
+
+chown -R "${APP_USER}:${APP_GROUP}" "${APP_ROOT}"
+
+ENV_FILE="${APP_ROOT}/backend/.env"
+ENV_TEMPLATE="${APP_ROOT}/backend/.env.example"
 if [[ ! -f "${ENV_TEMPLATE}" ]]; then
-  echo "${LOG_PREFIX} Missing backend/.env.example. Please add it before running the installer." >&2
+  echo "${LOG_PREFIX} Missing backend/.env.example inside ${APP_ROOT}." >&2
   exit 1
 fi
 
@@ -96,27 +142,101 @@ if [[ ! -f "${ENV_FILE}" ]]; then
   cp "${ENV_TEMPLATE}" "${ENV_FILE}"
   RANDOM_SECRET=$(openssl rand -base64 48 | tr -d '\n')
   sed -i "s|JWT_SECRET=change-me|JWT_SECRET=${RANDOM_SECRET}|" "${ENV_FILE}"
+  chown "${APP_USER}:${APP_GROUP}" "${ENV_FILE}"
 else
   info "backend/.env already exists; leaving in place"
 fi
 
 info "Installing Node.js dependencies for backend"
-(cd "${REPO_ROOT}/backend" && npm install)
+run_as_app "${APP_ROOT}/backend" "npm ci"
 
 info "Installing Node.js dependencies for frontend"
-(cd "${REPO_ROOT}/frontend" && npm install)
+run_as_app "${APP_ROOT}/frontend" "npm ci"
 
 info "Building backend"
-(cd "${REPO_ROOT}/backend" && npm run build)
+run_as_app "${APP_ROOT}/backend" "npm run build"
 
 info "Building frontend"
-(cd "${REPO_ROOT}/frontend" && npm run build)
+run_as_app "${APP_ROOT}/frontend" "npm run build"
+
+info "Deploying frontend build to ${FRONTEND_WEB_ROOT}"
+rsync -a --delete "${APP_ROOT}/frontend/dist/" "${FRONTEND_WEB_ROOT}/"
+chown -R www-data:www-data "${FRONTEND_WEB_ROOT}"
+
+SERVICE_FILE="/etc/systemd/system/${SYSTEMD_SERVICE}"
+info "Configuring systemd service at ${SERVICE_FILE}"
+cat >"${SERVICE_FILE}" <<SERVICE
+[Unit]
+Description=${BACKEND_SERVICE_NAME}
+After=network.target mongod.service
+
+[Service]
+Type=simple
+User=${APP_USER}
+Group=${APP_GROUP}
+WorkingDirectory=${APP_ROOT}/backend
+EnvironmentFile=${ENV_FILE}
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node dist/server/index.js
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+SERVICE
+
+info "Reloading systemd daemon"
+systemctl daemon-reload
+systemctl enable "${SYSTEMD_SERVICE}"
+systemctl restart "${SYSTEMD_SERVICE}"
+
+NGINX_AVAILABLE="/etc/nginx/sites-available/altproductionhosting.conf"
+NGINX_ENABLED="/etc/nginx/sites-enabled/altproductionhosting.conf"
+info "Provisioning nginx configuration for ${DOMAIN}"
+cat >"${NGINX_AVAILABLE}" <<NGINX
+server {
+    listen 80;
+    listen [::]:80;
+    server_name ${DOMAIN} altproductionhosting.com;
+
+    root ${FRONTEND_WEB_ROOT};
+    index index.html;
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:4000/;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+
+    location / {
+        try_files \$uri \$uri/ /index.html;
+    }
+}
+NGINX
+
+ln -sf "${NGINX_AVAILABLE}" "${NGINX_ENABLED}"
+if [[ -f /etc/nginx/sites-enabled/default ]]; then
+  rm -f /etc/nginx/sites-enabled/default
+fi
+
+info "Testing nginx configuration"
+nginx -t
+
+info "Reloading nginx"
+systemctl reload nginx
 
 cat <<SUMMARY
 ${LOG_PREFIX} Installation complete!
 
-Next steps:
-  - Configure reverse proxies or process managers (e.g., systemd, PM2) for backend/dist/server/index.js.
-  - Serve frontend/dist as static assets via nginx or another web server.
-  - Verify MongoDB is running: sudo systemctl status mongod
+Services:
+  - Backend API: systemd service '${SYSTEMD_SERVICE}' (sudo systemctl status ${SYSTEMD_SERVICE})
+  - Frontend: served via nginx at http://${DOMAIN}/
+  - MongoDB: systemd service 'mongod'
+
+You can now access the platform at http://${DOMAIN}/
 SUMMARY
