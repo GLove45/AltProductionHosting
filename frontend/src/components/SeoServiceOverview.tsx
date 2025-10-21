@@ -26,7 +26,7 @@ const sortByPriority = (items: DomainSeoActionItem[]) =>
   });
 
 const selectTopIssues = (issues: DomainSeoIssue[], limit = 4) =>
-  issues
+  [...issues]
     .sort((a, b) => {
       const severityOrder = { critical: 0, warning: 1, notice: 2 } as const;
       const severityDiff = severityOrder[a.severity] - severityOrder[b.severity];
