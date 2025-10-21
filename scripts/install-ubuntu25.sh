@@ -157,11 +157,6 @@ if ! command -v mongod >/dev/null 2>&1; then
   MONGO_KEYRING=/usr/share/keyrings/mongodb-server-7.0.gpg
   curl -fsSL https://pgp.mongodb.com/server-7.0.asc | gpg --dearmor -o "${MONGO_KEYRING}"
 
-  MONGO_LIST_FILE="/etc/apt/sources.list.d/mongodb-org-7.0.list"
-  if [[ -f "${MONGO_LIST_FILE}" ]]; then
-    warn "Removing stale MongoDB repository configuration before probing releases."
-    rm -f "${MONGO_LIST_FILE}"
-  fi
 
   SUPPORTED_MONGO_CODENAMES=("noble" "jammy")
   TARGET_CODENAME="${UBUNTU_CODENAME:-${VERSION_CODENAME:-}}"
@@ -186,7 +181,9 @@ if ! command -v mongod >/dev/null 2>&1; then
       warn "Using MongoDB repository for '${RESOLVED_CODENAME}' (instead of '${TARGET_CODENAME}')."
     fi
     echo "deb [ arch=amd64,arm64 signed-by=${MONGO_KEYRING} ] https://repo.mongodb.org/apt/ubuntu ${RESOLVED_CODENAME}/mongodb-org/7.0 multiverse" \
-      > "${MONGO_LIST_FILE}"
+
+       /etc/apt/sources.list.d/mongodb-org-7.0.list
+ main
     apt_update_once=false
     if apt_update; then
       apt-get install -y mongodb-org
