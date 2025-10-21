@@ -1,5 +1,11 @@
 node_modules/
 dist/
+!backend/dist/
+backend/dist/*
+!backend/dist/.gitkeep
+!frontend/dist/
+frontend/dist/*
+!frontend/dist/.gitkeep
 build/
 .env
 .DS_Store
