@@ -4,6 +4,8 @@ export type HostingFile = {
   path: string;
   sizeMb: number;
   contentType: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type HostingSpace = {
@@ -14,4 +16,6 @@ export type HostingSpace = {
   storageLimitMb: number;
   storageUsedMb: number;
   files: HostingFile[];
+  createdAt: string;
+  updatedAt: string;
 };

@@ -2,27 +2,21 @@ export type DomainRegistrarProvider = 'internal' | 'namecheap' | 'cloudflare';
 
 export type DomainStatus = 'pending-verification' | 'active' | 'suspended';
 
-export interface DomainRegistrationInput {
-  domainName: string;
-  userId: string;
-  registrarProvider: DomainRegistrarProvider;
-}
-
-export interface DomainEntity {
+export type Domain = {
   id: string;
   name: string;
   userId: string;
   registrarProvider: DomainRegistrarProvider;
   status: DomainStatus;
   verificationToken: string;
-  createdAt: Date;
-  updatedAt: Date;
-  verifiedAt?: Date;
-}
+  createdAt: string;
+  updatedAt: string;
+  verifiedAt?: string;
+};
 
 export type SeoIssueSeverity = 'critical' | 'warning' | 'notice';
 
-export interface DomainSeoIssue {
+export type DomainSeoIssue = {
   id: string;
   title: string;
   severity: SeoIssueSeverity;
@@ -30,29 +24,29 @@ export interface DomainSeoIssue {
   recommendation: string;
   impact: string;
   affectedPages: number;
-}
+};
 
-export interface DomainSeoKeywordRanking {
+export type DomainSeoKeywordRanking = {
   keyword: string;
   position: number;
   change: number;
   url: string;
   searchVolume: number;
   difficulty: number;
-}
+};
 
-export interface DomainSeoBacklinkProfile {
+export type DomainSeoBacklinkProfile = {
   totalBacklinks: number;
   referringDomains: number;
   authorityScore: number;
   newLast30Days: number;
   lostLast30Days: number;
   topAnchorTexts: string[];
-}
+};
 
 export type DomainSeoActionStatus = 'todo' | 'in-progress' | 'completed';
 
-export interface DomainSeoActionItem {
+export type DomainSeoActionItem = {
   id: string;
   title: string;
   status: DomainSeoActionStatus;
@@ -60,32 +54,32 @@ export interface DomainSeoActionItem {
   owner: string;
   dueDate: string;
   impact: string;
-}
+};
 
-export interface DomainSeoCompetitorBenchmark {
+export type DomainSeoCompetitorBenchmark = {
   domain: string;
   visibilityScore: number;
   keywordGap: number;
   backlinkGap: number;
   topKeyword: string;
-}
+};
 
 export type DomainSeoStructuredStatus = 'valid' | 'warning' | 'error';
 
-export interface DomainSeoStructuredData {
+export type DomainSeoStructuredData = {
   schemaType: string;
   status: DomainSeoStructuredStatus;
   notes: string;
-}
+};
 
-export interface DomainSeoLighthouseScore {
+export type DomainSeoLighthouseScore = {
   performance: number;
   accessibility: number;
   bestPractices: number;
   seo: number;
-}
+};
 
-export interface DomainSeoInsights {
+export type DomainSeoInsights = {
   healthScore: number;
   crawlabilityScore: number;
   pageSpeedScore: number;
@@ -99,9 +93,9 @@ export interface DomainSeoInsights {
   actionPlan: DomainSeoActionItem[];
   serpFeatures: string[];
   monitoringCapabilities: string[];
-}
+};
 
-export interface DomainTrafficTotals {
+export type DomainTrafficTotals = {
   visits: number;
   uniqueVisitors: number;
   pages: number;
@@ -109,60 +103,60 @@ export interface DomainTrafficTotals {
   bandwidthMb: number;
   avgVisitDuration: string;
   bounceRate: number;
-}
+};
 
-export interface DomainTrafficSource {
+export type DomainTrafficSource = {
   source: string;
   visits: number;
   change: number;
   percentage: number;
-}
+};
 
-export interface DomainTrafficDailyStat {
+export type DomainTrafficDailyStat = {
   date: string;
   visits: number;
   pages: number;
   bandwidthMb: number;
-}
+};
 
-export interface DomainTrafficHourlyStat {
+export type DomainTrafficHourlyStat = {
   hour: string;
   hits: number;
   visits: number;
-}
+};
 
-export interface DomainTrafficTopPage {
+export type DomainTrafficTopPage = {
   url: string;
   views: number;
   entryRate: number;
   exitRate: number;
-}
+};
 
-export interface DomainTrafficKeyword {
+export type DomainTrafficKeyword = {
   keyword: string;
   visits: number;
   position: number;
-}
+};
 
-export interface DomainTrafficReferrer {
+export type DomainTrafficReferrer = {
   source: string;
   visits: number;
   type: 'search' | 'social' | 'direct' | 'referral';
-}
+};
 
-export interface DomainTrafficCountry {
+export type DomainTrafficCountry = {
   country: string;
   visits: number;
   bandwidthMb: number;
-}
+};
 
-export interface DomainTrafficHttpStatus {
+export type DomainTrafficHttpStatus = {
   code: string;
   description: string;
   count: number;
-}
+};
 
-export interface DomainAwStatsOverview {
+export type DomainAwStatsOverview = {
   period: {
     month: string;
     year: number;
@@ -176,11 +170,11 @@ export interface DomainAwStatsOverview {
   topReferrers: DomainTrafficReferrer[];
   topCountries: DomainTrafficCountry[];
   httpStatus: DomainTrafficHttpStatus[];
-}
+};
 
-export interface DomainAnalytics {
+export type DomainAnalytics = {
   domainId: string;
   generatedAt: string;
   seo: DomainSeoInsights;
   awstats: DomainAwStatsOverview;
-}
+};

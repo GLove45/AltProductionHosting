@@ -39,4 +39,13 @@ export class DomainController {
       next(error);
     }
   }
+
+  async getAnalytics(req: Request, res: Response, next: NextFunction) {
+    try {
+      const analytics = await this.service.getDomainAnalytics(req.params.id);
+      res.json(analytics);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
