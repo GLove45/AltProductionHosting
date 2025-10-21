@@ -26,3 +26,17 @@ Environment variables allow you to customize the probe without editing the file:
 - `BACKEND_HEALTH_PATH` – Path appended to the backend URL (defaults to `/healthz`).
 
 The script also checks the backend `.env` (or `.env.example`) to flag accidental usage of port 80, which is reserved on the deployment host.
+
+### `sync-repo.sh`
+
+Clones (if needed) and pulls this repository into `/var/www/altproductionhosting`. The script determines the repository URL from the current checkout's `origin` remote, but you can override it with the `REPO_URL` environment variable. The destination directory can also be customized via `TARGET_DIR`.
+
+```bash
+# From the repository root
+./scripts/sync-repo.sh
+
+# Override the repository URL or target directory if necessary
+REPO_URL="git@github.com:example/AltProductionHosting.git" TARGET_DIR="/srv/alt" ./scripts/sync-repo.sh
+```
+
+Make sure the user running the script has permission to create or update the destination directory (e.g., `/var/www`).
