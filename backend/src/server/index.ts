@@ -9,6 +9,10 @@ app.use(cors());
 app.use(express.json({ limit: `${env.fileUploadLimitMb}mb` }));
 app.use(express.urlencoded({ extended: true }));
 
+app.get('/healthz', (_req, res) => {
+  res.json({ status: 'ok' });
+});
+
 registerRoutes(app);
 
 export const startServer = () => {
