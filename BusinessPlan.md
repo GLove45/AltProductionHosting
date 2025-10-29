@@ -4,7 +4,7 @@
 This document outlines a phased 10-year expansion roadmap for the hosting and AI security services business. The plan spans four milestones (Year 1, Year 3, Year 5, and Year 10), gradually scaling infrastructure from an initial studio space in England to a three-site European footprint (England, Iberia, Berlin). Each milestone details capital expenditure (CapEx), operating expenditure (OpEx), revenue forecasts based on the storage pricing model, and risk mitigation strategies. All projections are expressed in pounds sterling (GBP) and leverage conservative yet realistic assumptions for hardware, connectivity, staffing, energy, and renewable investments.
 
 ## Core Assumptions
-- **Compute Nodes:** Raspberry Pi 5 (16 GB RAM) with 1 TB SSD and 26 TOPS AI HAT at £400 each.
+- **Compute Nodes:** Raspberry Pi 5 (16 GB RAM) with 4 TB SSD and 26 TOPS AI HAT at £400 each.
 - **Racks & Units:** 1 rack = 5 nodes (~£2,000). 1 complete unit = 5 racks (25 nodes) at ~£10,000.
 - **Initial Location:** Rented studio space in England using grid energy; shift to owned land with solar/wind as capital allows.
 - **Network Connectivity:** Baseline ISP cost £100/month for 2 Gbps symmetrical. Plan for eventual increase up to £500/month as throughput requirements grow.
