@@ -9,10 +9,9 @@ This document outlines a phased 10-year expansion roadmap for the hosting and AI
 - **Initial Location:** Rented studio space in England using grid energy; shift to owned land with solar/wind as capital allows.
 - **Network Connectivity:** Baseline ISP cost £100/month for 2 Gbps symmetrical. Plan for eventual increase up to £500/month as throughput requirements grow.
 - **Pricing Strategy (annual per tenant):**
-  - 5 GB @ £50
-  - 10 GB @ £75
-  - 25 GB @ £125
-  - 50 GB @ £200
+  - 5 GB @ £40
+  - 25 GB @ £100
+  - 50 GB @ £180
   - 100 GB @ £300
   - 250 GB @ £500
 - **Revenue Mix:** 95% of revenue from storage subscriptions for the first three years, gradually introducing value-added AI-driven security and managed services to represent 25% of total revenue by Year 10.
