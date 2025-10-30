@@ -1,0 +1,2 @@
+# Stable anonymized host identifier placeholder.
+# Derive from WireGuard public key or UUIDv5 during provisioning.
