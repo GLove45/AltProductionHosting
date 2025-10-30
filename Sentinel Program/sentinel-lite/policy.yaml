@@ -1,0 +1,135 @@
+# Sentinel Lite policy specification
+schema_version: 1
+metadata:
+  name: sentinel-lite-default
+  description: Baseline policy for the Sentinel Lite autonomous responder.
+  owner: security-operations@altproduction.example
+  timezone: Europe/London
+  revision: 2024-05-30T09:00:00Z
+  policy_checksum: 0000000000000000000000000000000000000000000000000000000000000000
+  reload:
+    trigger: sighup
+    backoff_seconds: 5
+    abort_on_checksum_mismatch: true
+    last_applied: null
+capabilities:
+  - token: sentinel-daemon
+    subject:
+      type: service-account
+      id: sentinel-lite
+    surfaces:
+      fs:
+        read_only:
+          - /opt/sentinel-lite
+          - /etc/sentinel-lite
+        read_write:
+          - /var/lib/sentinel-lite
+          - /opt/sentinel-lite/logs
+      network:
+        allow_interfaces:
+          - tun0
+          - lo
+        deny_interfaces:
+          - wlan0
+        allow_destinations:
+          - cidr: 10.8.0.0/24
+          - cidr: 192.0.2.0/24
+      processes:
+        allow:
+          - /opt/sentinel-lite/bin/sentinel-lite-agent
+          - /usr/sbin/nft
+        deny_exec_on_write: true
+    schedules:
+      - name: default-runtime
+        recurrence: daily
+        window:
+          start: "00:00"
+          end: "23:59"
+      - name: intensive-scan
+        recurrence: weekdays
+        window:
+          start: "01:00"
+          end: "03:00"
+        jitter_minutes: 15
+  - token: maintenance-shell
+    subject:
+      type: wg-peer
+      id: ops-gateway
+    surfaces:
+      fs:
+        read_only:
+          - /opt/sentinel-lite
+        read_write:
+          - /var/tmp/sentinel-lite/maintenance
+      network:
+        allow_interfaces:
+          - tun0
+        allow_destinations:
+          - hostname: updates.altproduction.example
+    schedules:
+      - name: maintenance-window
+        recurrence: weekly
+        days:
+          - Sunday
+        window:
+          start: "02:00"
+          end: "04:00"
+consent:
+  default_action: deny
+  rationale: |
+    All command execution is denied unless explicitly authorised by a capability token.
+  rules:
+    - token: sentinel-daemon
+      allow:
+        commands:
+          - nft list ruleset
+          - journalctl --unit=sentinel-lite.service --since=-1h
+    - token: maintenance-shell
+      allow:
+        commands:
+          - apt-get update
+          - systemctl restart sentinel-lite.service
+thresholds:
+  authentication:
+    burst_window_seconds: 300
+    max_failed_attempts: 5
+    reset_after_seconds: 1200
+  network:
+    vpn_interface: tun0
+    max_egress_mib_per_hour: 900
+    alert_on_plaintext_ports:
+      - 21
+      - 23
+      - 80
+  filesystem:
+    max_change_events_per_minute: 120
+    quarantine_paths:
+      - /opt/sentinel-lite/logs
+      - /var/lib/sentinel-lite/evidence
+maintenance:
+  windows:
+    - name: weekly-patching
+      recurrence: weekly
+      days:
+        - Sunday
+      window:
+        start: "02:00"
+        end: "04:00"
+      suppress_detectors:
+        - integrity
+        - procguard
+    - name: quarterly-audit
+      recurrence: cron
+      expression: "0 22 15 */3 *"
+      suppress_detectors:
+        - netwatch
+  suppressions:
+    - name: staging-host
+      match:
+        hostname: sentinel-staging.altproduction.example
+      expires: 2024-12-31T23:59:59Z
+      reason: Awaiting certificate rotation
+  validations:
+    strict_keys: true
+    checksum_algorithm: sha256
+    require_signed_policy: true

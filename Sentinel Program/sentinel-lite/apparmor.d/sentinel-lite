@@ -1,0 +1,74 @@
+# Sentinel Lite AppArmor profile
+#include <tunables/global>
+
+profile sentinel-lite flags=(attach_disconnected,mediate_deleted) {
+  # Runtime binaries and libraries
+  /opt/sentinel-lite/bin/sentinel-lite-agent rmix,
+  /opt/sentinel-lite/bin/** rmix,
+  /opt/sentinel-lite/lib/** r,
+
+  # Policy and configuration
+  /opt/sentinel-lite/policy.yaml r,
+  /etc/sentinel-lite/** r,
+
+  # Secrets and cryptographic material
+  /opt/sentinel-lite/secrets/** r,
+  owner /opt/sentinel-lite/secrets/** rk,
+
+  # Logs and runtime state
+  /var/lib/sentinel-lite/** rwk,
+  /var/log/sentinel-lite/** rwk,
+  /opt/sentinel-lite/logs/** rwk,
+
+  # Temporary runtime files
+  /run/sentinel-lite/** rwk,
+  owner /tmp/sentinel-lite.** rwk,
+
+  # Allow read-only visibility into proc needed for telemetry
+  /proc/cpuinfo r,
+  /proc/meminfo r,
+  /proc/net/dev r,
+  /proc/net/tcp r,
+  /proc/net/tcp6 r,
+  /proc/net/udp r,
+  /proc/net/udp6 r,
+  /proc/sys/net/** r,
+  /proc/*/cmdline r,
+  /proc/*/stat r,
+  /proc/*/status r,
+
+  # Netlink and fanotify access for collectors
+  capability net_admin,
+  capability net_raw,
+  capability sys_admin,
+  network inet stream,
+  network inet6 stream,
+  network inet dgram,
+  network inet6 dgram,
+  network netlink raw,
+
+  # Allow invoking nft for fail-closed rule reconciliation
+  /usr/sbin/nft mix,
+  /etc/nftables.conf r,
+
+  # Deny any access to user home directories
+  deny /home/** rwklm,
+  deny /root/** rwklm,
+
+  # Deny module loading and kernel mutation
+  deny /sys/kernel/security/** rwklm,
+  deny /sys/module/** rwklm,
+
+  # Misc system binaries required for safe operation
+  /bin/kill ix,
+  /bin/cat ixr,
+  /bin/echo ixr,
+  /usr/bin/env ixr,
+  /usr/bin/printf ixr,
+
+  # Logging
+  capability syslog,
+
+  # Default deny
+  deny /** mrwklx,
+}
