@@ -1,0 +1,4 @@
+# Curated domain blocklist (keep concise to avoid false positives).
+# Document provenance and signature for each refresh.
+malware.example.com
+phishing.example.org

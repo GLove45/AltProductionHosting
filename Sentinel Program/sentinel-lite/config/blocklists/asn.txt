@@ -1,0 +1,4 @@
+# ASN blocklist tuned for Sentinel Lite deployments.
+# Signed metadata accompanies updates to this list.
+AS13335
+AS32934
