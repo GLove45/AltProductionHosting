@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Dict, List
 
 from ..config import CoordinatorConfig
@@ -35,15 +35,15 @@ class Coordinator:
     policy_engine: PolicyEngine
     feedback_loop: FeedbackLoop
     feature_store: FeatureStore
-    alerts: List[Alert] = None
-
-    def __post_init__(self) -> None:
-        self.alerts = []
+    alerts: List[Alert] = field(default_factory=list)
+    last_decision: PolicyDecision | None = None
+    last_ingest_latency_ms: float = 0.0
 
     def evaluate(self, anomaly_scores: Dict[str, float]) -> PolicyDecision:
         """Evaluate current posture and generate an alert if required."""
 
         decision = self.policy_engine.evaluate(anomaly_scores)
+        self.last_decision = decision
         severity = self._map_action_to_severity(decision.action)
         alert = Alert(
             id=f"alert-{len(self.alerts) + 1}",
@@ -51,7 +51,11 @@ class Coordinator:
             severity=severity,
             summary=f"Action={decision.action} Confidence={decision.confidence:.2f}",
             rationale=decision.rationale,
-            recommendation="Require Elevated" if decision.action != "allow" else "Allow",
+            recommendation=(
+                decision.playbooks.get(decision.rule_hits[0].tripwire, ["Review"])[0]
+                if decision.rule_hits
+                else ("Allow" if decision.action == "allow" else "Review")
+            ),
         )
         self.alerts.append(alert)
         logger.info(
@@ -71,6 +75,15 @@ class Coordinator:
 
         self.feedback_loop.record(record)
 
+    def record_ingest_latency(self, latency_ms: float) -> None:
+        """Update ingest to UI latency measurements."""
+
+        self.last_ingest_latency_ms = latency_ms
+        logger.debug(
+            "Latency updated",
+            extra={"sentinel_context": {"latency_ms": latency_ms}},
+        )
+
     def _map_action_to_severity(self, action: str) -> str:
         mapping = {
             "allow": "info",
@@ -89,3 +102,37 @@ class Coordinator:
             extra={"sentinel_context": {"requested": limit, "returned": len(alerts)}},
         )
         return alerts
+
+    def decision_console(self) -> Dict[str, object]:
+        """Return the latest decision context for the UI console."""
+
+        if not self.last_decision:
+            return {
+                "status": "idle",
+                "playbooks": {},
+                "requires_approval": False,
+                "approval_deadline": None,
+            }
+        decision = self.last_decision
+        console = {
+            "status": decision.action,
+            "confidence": decision.confidence,
+            "playbooks": decision.playbooks,
+            "requires_approval": decision.requires_approval,
+            "approval_deadline": decision.approval_deadline,
+        }
+        logger.debug(
+            "Decision console snapshot",
+            extra={"sentinel_context": console},
+        )
+        return console
+
+    def suggested_automations(self) -> Dict[str, int]:
+        """Expose learning loop suggestions for auto-execution."""
+
+        suggestions = self.feedback_loop.suggested_automations()
+        logger.debug(
+            "Fetched suggested automations",
+            extra={"sentinel_context": {"count": len(suggestions)}},
+        )
+        return suggestions

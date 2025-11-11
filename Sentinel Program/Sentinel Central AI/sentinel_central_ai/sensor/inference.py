@@ -35,7 +35,10 @@ class InferenceEngine:
 
         start = datetime.now(UTC)
         features = self.feature_store.snapshot()
-        scores = {feature: value * 0.1 for feature, value in features.items()}
+        scores: Dict[str, float] = {}
+        for feature, value in features.items():
+            scores[feature] = float(value)
+            scores[f"anomaly.{feature}"] = float(value) * 0.1
         batch = InferenceBatch(
             started_at=start,
             completed_at=datetime.now(UTC),
