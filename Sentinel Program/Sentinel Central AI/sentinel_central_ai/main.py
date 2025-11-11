@@ -15,6 +15,8 @@ def run_demo() -> None:
     # Simulate ingest + inference + policy evaluation
     feature_window = context.ingest_pipeline.pump()
     batch = context.inference_engine.score()
+    latency_ms = (batch.completed_at - batch.started_at).total_seconds() * 1000
+    context.coordinator.record_ingest_latency(latency_ms)
     decision = context.coordinator.evaluate(batch.scores)
 
     # Simulate operator feedback
@@ -26,10 +28,12 @@ def run_demo() -> None:
         timestamp=datetime.now(UTC),
         feature_vector=feature_window.features,
         rule_hits=[hit.tripwire for hit in decision.rule_hits],
+        action=decision.action,
+        outcome="approved" if decision.action != "allow" else "auto",
     )
     context.coordinator.log_feedback(feedback)
 
-    suggestions = context.feedback_loop.suggestions()
+    suggestions = context.feedback_loop.suggested_automations()
     print("Policy decision:", decision)
     print("Suggestions:", suggestions)
 

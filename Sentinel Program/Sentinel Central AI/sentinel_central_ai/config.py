@@ -12,7 +12,8 @@ class StorageConfig:
     """Persistence configuration for features, decisions, and digests."""
 
     engine: str = "sqlite"
-    dsn: str = "sqlite:///sentinel.db"
+    dsn: str = "sqlite:///var/sentinel/features.db"
+    audit_log_path: str = "var/sentinel/audit.log"
     digest_interval: timedelta = timedelta(hours=1)
 
 
@@ -21,22 +22,25 @@ class TelemetryConfig:
     """Sensor telemetry ingestion definition."""
 
     cadence_seconds: int = 1
+    redis_url: str = "redis://localhost:6379/0"
+    redis_channel: str = "sentinel.telemetry"
+    redis_list_key: str = "sentinel.telemetry.queue"
     sources: List[str] = field(
         default_factory=lambda: [
-            "auth_log",
-            "sudo_events",
-            "ssh_attempts",
-            "process_snapshots",
-            "listening_ports",
-            "outbound_connections",
-            "dns_queries",
-            "system_metrics",
-            "disk_smart",
-            "service_restarts",
-            "package_changes",
-            "firewall_changes",
-            "accelerator_health",
-            "latency_probes",
+            "auth_logs",
+            "process_inventory",
+            "open_sockets",
+            "kernel_audit",
+            "file_integrity",
+            "package_inventory",
+            "systemd_states",
+            "wireguard_status",
+            "clamav_scan",
+            "yara_sweep",
+            "ebpf_counters",
+            "http_telemetry",
+            "dns_watch",
+            "exfil_watch",
         ]
     )
 
@@ -92,13 +96,20 @@ class PolicyConfig:
     thresholds: PolicyThresholds = field(default_factory=PolicyThresholds)
     rules: List[RuleConfig] = field(
         default_factory=lambda: [
-            RuleConfig(tripwire="ssh_burst", threshold=10, description="SSH burst detection"),
-            RuleConfig(tripwire="new_high_risk_listener", description="New listener on high-risk port"),
-            RuleConfig(tripwire="sudoers_change", description="Change to sudoers or firewall"),
-            RuleConfig(tripwire="unsigned_binary_execution", description="Unsigned binary execution"),
-            RuleConfig(tripwire="outbound_non_whitelist", description="Outbound to non-whitelisted ASN/TLD"),
-            RuleConfig(tripwire="dns_high_entropy", description="DNS to newly observed high entropy domain"),
-            RuleConfig(tripwire="daemon_restart", description="Daemon restarts outside maintenance window"),
+            RuleConfig(tripwire="malware.signature_hits", threshold=1, description="ClamAV signature hit"),
+            RuleConfig(tripwire="malware.yara_hits", threshold=1, description="YARA rule match"),
+            RuleConfig(tripwire="malware.unsigned_binaries", threshold=1, description="Unsigned binary execution"),
+            RuleConfig(tripwire="malware.setuid_change", threshold=1, description="Setuid bit changed"),
+            RuleConfig(tripwire="fim.aide_deviation", threshold=1, description="AIDE drift detected"),
+            RuleConfig(tripwire="intrusion.ssh_bruteforce", threshold=1, description="SSH brute force"),
+            RuleConfig(tripwire="ddos.syn_rate", threshold=120, description="SYN flood volume"),
+            RuleConfig(tripwire="ddos.udp_flood", threshold=60, description="UDP flood volume"),
+            RuleConfig(tripwire="http.error_rate", threshold=1, description="HTTP 4xx/5xx spike"),
+            RuleConfig(tripwire="http.user_agent_anomaly", threshold=1, description="HTTP UA anomaly"),
+            RuleConfig(tripwire="exfil.long_lived_outbound", threshold=80, description="Suspicious outbound"),
+            RuleConfig(tripwire="exfil.dns_tunnel_score", threshold=1, description="DNS tunneling"),
+            RuleConfig(tripwire="wireguard.anomaly", threshold=1, description="WireGuard enforcement bypass"),
+            RuleConfig(tripwire="services.restarts", threshold=4, description="Service restart storm"),
         ]
     )
 
@@ -117,7 +128,7 @@ class CoordinatorConfig:
     """Coordinator node configuration."""
 
     host: str = "coordinator.local"
-    ui_endpoint: str = "http://coordinator.local:8080"
+    ui_endpoint: str = "https://coordinator.local:8443"
     approvals_api: str = "https://coordinator.local:8443/approvals"
     storage_engine: str = "sqlite"
 

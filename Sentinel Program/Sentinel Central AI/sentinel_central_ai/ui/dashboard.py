@@ -19,17 +19,29 @@ class Dashboard:
     coordinator: Coordinator
 
     def current_posture(self) -> Dict[str, object]:
-        alerts = self.coordinator.latest_alerts(limit=1)
+        alerts = self.coordinator.latest_alerts(limit=3)
+        snapshot = self.coordinator.feature_store.snapshot()
         posture = {
             "coordinator_host": self.coordinator.config.host,
-            "policy_mode": self.coordinator.policy_engine.thresholds,
-            "latest_alert": alerts[0].summary if alerts else "None",
+            "ui_endpoint": self.coordinator.config.ui_endpoint,
+            "policy_thresholds": self.coordinator.policy_engine.thresholds,
+            "latest_alerts": [alert.summary for alert in alerts],
+            "feature_snapshot": snapshot,
+            "latency_ms": self.coordinator.last_ingest_latency_ms,
+            "https_enabled": self.coordinator.config.ui_endpoint.startswith("https://"),
         }
         logger.debug(
             "Computed current posture",
             extra={"sentinel_context": posture},
         )
         return posture
+
+    def overview(self) -> Dict[str, object]:
+        """Alias for the primary overview panel."""
+
+        overview = self.current_posture()
+        overview["suggested_automations"] = self.coordinator.suggested_automations()
+        return overview
 
     def timeline(self, limit: int = 10) -> List[Alert]:
         alerts = self.coordinator.latest_alerts(limit=limit)
@@ -38,3 +50,14 @@ class Dashboard:
             extra={"sentinel_context": {"count": len(alerts)}},
         )
         return alerts
+
+    def decision_console(self) -> Dict[str, object]:
+        """Expose the coordinator's latest decision context."""
+
+        console = self.coordinator.decision_console()
+        console["suggested_automations"] = self.coordinator.suggested_automations()
+        logger.debug(
+            "Decision console hydrated",
+            extra={"sentinel_context": console},
+        )
+        return console
