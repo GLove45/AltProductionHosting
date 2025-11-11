@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Sentinel Control</string>
+    <string name="approve">Approve</string>
+    <string name="lock">Lock</string>
+    <string name="unlock">Unlock</string>
+    <string name="quarantine">Quarantine</string>
+    <string name="register_device">Register Device</string>
+    <string name="revoke_device">Revoke Device</string>
+    <string name="network_health">Network Health</string>
+</resources>
