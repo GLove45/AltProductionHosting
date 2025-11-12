@@ -1,4 +1,4 @@
-# Sentinel Central AI Installation and Bashboard Setup
+# Sentinel Central AI Installation and Dashboard Setup
 
 > **Audience**: Site reliability engineers and platform operators bringing Sentinel Central AI online across Raspberry Pi clusters that already hold a synced Git checkout.
 >
