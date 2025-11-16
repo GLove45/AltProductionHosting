@@ -48,6 +48,65 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
+            android:background="#121433"
+            android:padding="16dp"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Device Owner Control"
+                android:textColor="#FF00B7"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/device_owner_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Device owner pending"
+                android:textColor="#E5E5FF"
+                android:textSize="14sp"
+                android:paddingTop="8dp" />
+
+            <TextView
+                android:id="@+id/admin_login_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#9AA1B9"
+                android:textSize="13sp"
+                android:paddingTop="4dp"
+                android:text="MFA pending" />
+
+            <Button
+                android:id="@+id/enroll_device_owner_btn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Enroll / update admin"
+                android:textAllCaps="false" />
+
+            <Button
+                android:id="@+id/verify_admin_btn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Verify admin"
+                android:textAllCaps="false" />
+
+            <Button
+                android:id="@+id/scan_apps_btn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Run zero-trust scan"
+                android:textAllCaps="false" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
             android:background="#0C1F30"
             android:padding="16dp"
             android:layout_marginBottom="12dp">
@@ -74,6 +133,30 @@
                 android:text="Register token"
                 android:textAllCaps="false"
                 android:layout_marginTop="8dp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="#0A0F1F"
+            android:padding="16dp"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Zero-Trust Policies"
+                android:textColor="#FF00B7"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/policy_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingTop="8dp" />
         </LinearLayout>
 
         <LinearLayout
@@ -107,6 +190,30 @@
                 android:text="Refresh"
                 android:textAllCaps="false"
                 android:layout_marginTop="8dp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="#0C1F30"
+            android:padding="16dp"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Managed Apps"
+                android:textColor="#FF00B7"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/app_monitor_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingTop="8dp" />
         </LinearLayout>
 
         <LinearLayout

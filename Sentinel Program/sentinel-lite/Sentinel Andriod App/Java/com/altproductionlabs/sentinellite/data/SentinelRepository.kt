@@ -4,6 +4,7 @@ import android.content.Context
 import com.altproductionlabs.sentinellite.core.AlertEntity
 import com.altproductionlabs.sentinellite.core.AlertSeverity
 import com.altproductionlabs.sentinellite.core.DashboardState
+import com.altproductionlabs.sentinellite.core.DeviceOwnerState
 import com.altproductionlabs.sentinellite.core.IsolationState
 import com.altproductionlabs.sentinellite.core.NetworkSnapshot
 import com.altproductionlabs.sentinellite.core.RiskScore
@@ -17,6 +18,7 @@ import com.altproductionlabs.sentinellite.engine.LocalMonitoringEngine
 import com.altproductionlabs.sentinellite.engine.NetworkIntelligenceModule
 import com.altproductionlabs.sentinellite.engine.RulesEngine
 import com.altproductionlabs.sentinellite.security.AuditLogger
+import com.altproductionlabs.sentinellite.security.DeviceOwnerManager
 import com.altproductionlabs.sentinellite.security.EvidenceVault
 import com.altproductionlabs.sentinellite.security.IsolationController
 import com.altproductionlabs.sentinellite.security.LocalMfaRegistry
@@ -28,6 +30,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.UUID
 
 class SentinelRepository private constructor(private val context: Context) :
@@ -42,6 +45,7 @@ class SentinelRepository private constructor(private val context: Context) :
     private val isolationController = IsolationController(context)
     private val mfaRegistry = LocalMfaRegistry(context)
     private val evidenceVault = EvidenceVault(context)
+    private val deviceOwnerManager = DeviceOwnerManager(context)
     private val auditLogger = AuditLogger(context)
     private val simulationModule = SimulationModule()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -66,6 +70,7 @@ class SentinelRepository private constructor(private val context: Context) :
             auditLog = auditLogger.read()
         )
     )
+    private val _deviceOwnerState = MutableStateFlow(deviceOwnerManager.currentState())
 
     init {
         scope.launch { refreshNow() }
@@ -138,6 +143,8 @@ class SentinelRepository private constructor(private val context: Context) :
 
     override fun observeSecurityState(): kotlinx.coroutines.flow.Flow<SecurityState> = _securityState.asStateFlow()
 
+    override fun observeDeviceOwnerState(): kotlinx.coroutines.flow.Flow<DeviceOwnerState> = _deviceOwnerState.asStateFlow()
+
     fun toggleIsolation(enable: Boolean) {
         val state = if (enable) isolationController.enableIsolation() else isolationController.disableIsolation()
         _securityState.value = _securityState.value.copy(isolationState = state)
@@ -193,6 +200,42 @@ class SentinelRepository private constructor(private val context: Context) :
             auditLogger.append("Simulation executed: ${scenario.label}")
             _securityState.value = _securityState.value.copy(auditLog = auditLogger.read())
         }
+    }
+
+    suspend fun enrollDeviceOwner(adminName: String, passphrase: String) = withContext(Dispatchers.Default) {
+        _deviceOwnerState.value = deviceOwnerManager.enrollDeviceOwner(adminName, passphrase)
+        auditLogger.append("Device owner enrollment updated for $adminName")
+        _securityState.value = _securityState.value.copy(auditLog = auditLogger.read())
+    }
+
+    suspend fun verifyAdmin(passphrase: String): Boolean = withContext(Dispatchers.Default) {
+        val success = deviceOwnerManager.verifyAdmin(passphrase)
+        _deviceOwnerState.value = deviceOwnerManager.currentState()
+        auditLogger.append(if (success) "Admin verification succeeded" else "Admin verification failed")
+        _securityState.value = _securityState.value.copy(auditLog = auditLogger.read())
+        success
+    }
+
+    suspend fun setPolicyEnforcement(policyId: String, enforced: Boolean) = withContext(Dispatchers.Default) {
+        _deviceOwnerState.value = deviceOwnerManager.togglePolicy(policyId, enforced)
+        auditLogger.append("Policy $policyId ${if (enforced) "enforced" else "relaxed"}")
+        _securityState.value = _securityState.value.copy(auditLog = auditLogger.read())
+    }
+
+    suspend fun refreshDeviceOwnerState() = withContext(Dispatchers.Default) {
+        _deviceOwnerState.value = deviceOwnerManager.refreshMonitoredApps()
+    }
+
+    suspend fun quarantineApp(packageName: String, reason: String) = withContext(Dispatchers.Default) {
+        _deviceOwnerState.value = deviceOwnerManager.quarantineApp(packageName, reason)
+        auditLogger.append("App quarantined: $packageName")
+        _securityState.value = _securityState.value.copy(auditLog = auditLogger.read())
+    }
+
+    suspend fun releaseApp(packageName: String) = withContext(Dispatchers.Default) {
+        _deviceOwnerState.value = deviceOwnerManager.releaseApp(packageName)
+        auditLogger.append("App released: $packageName")
+        _securityState.value = _securityState.value.copy(auditLog = auditLogger.read())
     }
 
     companion object {
