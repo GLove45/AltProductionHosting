@@ -11,7 +11,7 @@ import kotlinx.coroutines.withContext
 
 class MfaPolicyEngine {
 
-    suspend fun collect(context: Context): PolicyResult = withContext(Dispatchers.IO) {
+    suspend fun collect(context: Context, minimumFactors: Int = 1): PolicyResult = withContext(Dispatchers.IO) {
         val sequence = mutableListOf<String>()
         if (!fingerprint(context)) {
             return@withContext PolicyResult(false, "Fingerprint authentication required", emptyList())
@@ -28,6 +28,10 @@ class MfaPolicyEngine {
 
         if (pin(context)) {
             sequence += "pin"
+        }
+
+        if (sequence.size < minimumFactors) {
+            return@withContext PolicyResult(false, "Additional MFA factors required", sequence)
         }
 
         PolicyResult(true, null, sequence)
@@ -69,9 +73,23 @@ class MfaPolicyEngine {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val requiresPin = prefs.getBoolean(PIN_REQUIRED, false)
         if (!requiresPin) return false
-        val storedPin = prefs.getString(PIN_VALUE, null) ?: return false
+        val storedPin = prefs.getString(PIN_VALUE, null)
+        if (storedPin.isNullOrBlank()) {
+            SentinelLogger.warn("PIN policy enabled but no PIN provisioned")
+            return false
+        }
         delay(100)
         return storedPin.length == 8
+    }
+
+    fun enforcePinRequirement(context: Context, enabled: Boolean) {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        prefs.edit().putBoolean(PIN_REQUIRED, enabled).apply()
+        if (enabled && prefs.getString(PIN_VALUE, null).isNullOrEmpty()) {
+            val generated = (10000000..99999999).random().toString()
+            prefs.edit().putString(PIN_VALUE, generated).apply()
+            SentinelLogger.info("Provisioned risk PIN placeholder")
+        }
     }
 
     companion object {

@@ -26,8 +26,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.sentinel.control.data.AlertSettings
 import com.sentinel.control.logging.AuditEvent
 import com.sentinel.control.network.NetworkStatus
+import com.sentinel.control.security.intel.AlertStoryboardEntry
+import com.sentinel.control.security.intel.SecurityComponentStatus
+import com.sentinel.control.security.intel.SecurityScore
 import com.sentinel.control.util.HygieneReport
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -39,7 +43,11 @@ fun SentinelScreen(
     onRevokeDevice: () -> Unit,
     onToggleLockdown: () -> Unit,
     onNetworkTest: () -> Unit,
-    onQuarantine: () -> Unit
+    onQuarantine: () -> Unit,
+    onRefreshSecurity: () -> Unit,
+    onToggleAlerts: () -> Unit,
+    onToggleAutoIsolation: () -> Unit,
+    onToggleRiskMfa: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -48,11 +56,14 @@ fun SentinelScreen(
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        HeaderSection(state)
+        HeaderSection(state, onRefreshSecurity)
         ActionButtons(onApprove, onRegisterDevice, onRevokeDevice, onQuarantine)
         LockdownToggle(state.lockdownEnabled, onToggleLockdown)
+        state.securityScore?.let { SecurityScoreCard(it) }
+        AlertSettingsCard(state.alertSettings, onToggleAlerts, onToggleAutoIsolation, onToggleRiskMfa)
         NetworkCard(state.networkStatus, onNetworkTest)
         HygieneCard(state.hygieneStatus)
+        AlertStoryboardCard(state.alertStoryboard)
         AuditLogList(state.auditEvents)
         ErrorBanner(state.lastError)
         StatusBanner(state.lastApprovalStatus ?: state.registrationStatus)
@@ -60,7 +71,7 @@ fun SentinelScreen(
 }
 
 @Composable
-private fun HeaderSection(state: SentinelUiState) {
+private fun HeaderSection(state: SentinelUiState, onRefresh: () -> Unit) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text("Sentinel Control", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
         Text(
@@ -68,6 +79,9 @@ private fun HeaderSection(state: SentinelUiState) {
             style = MaterialTheme.typography.bodyMedium,
             color = if (state.lockdownEnabled) Color.Red else MaterialTheme.colorScheme.primary
         )
+        Button(onClick = onRefresh, modifier = Modifier.padding(top = 8.dp)) {
+            Text("Update Intelligence Sweep")
+        }
     }
 }
 
@@ -126,6 +140,84 @@ private fun HygieneCard(report: HygieneReport) {
                 text = report.messages.joinToString().ifEmpty { "All hygiene checks passed" },
                 color = if (report.isSecure) MaterialTheme.colorScheme.onSurface else Color.Red
             )
+        }
+    }
+}
+
+@Composable
+private fun SecurityScoreCard(score: SecurityScore) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Live Security Score", style = MaterialTheme.typography.titleLarge)
+            Text("${'$'}{score.overall}/100 • ${'$'}{score.windowLabel}", fontWeight = FontWeight.Bold)
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                score.breakdown.forEach { component ->
+                    SecurityComponentRow(component)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SecurityComponentRow(component: SecurityComponentStatus) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(component.label, fontWeight = FontWeight.SemiBold)
+            Text(component.message, style = MaterialTheme.typography.bodySmall)
+        }
+        Text("Risk ${'$'}{component.risk}")
+    }
+}
+
+@Composable
+private fun AlertSettingsCard(
+    settings: AlertSettings,
+    onToggleAlerts: () -> Unit,
+    onToggleIsolation: () -> Unit,
+    onToggleRiskMfa: () -> Unit
+) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text("Security UX Settings", style = MaterialTheme.typography.titleLarge)
+            SettingRow("Push notifications", settings.pushEnabled, onToggleAlerts)
+            SettingRow("Auto isolation on threat", settings.isolationOnThreat, onToggleIsolation)
+            SettingRow("Require MFA on risk", settings.requireMfaOnThreat, onToggleRiskMfa)
+        }
+    }
+}
+
+@Composable
+private fun SettingRow(label: String, enabled: Boolean, onToggle: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(label)
+        Switch(checked = enabled, onCheckedChange = { onToggle() })
+    }
+}
+
+@Composable
+private fun AlertStoryboardCard(storyboard: List<AlertStoryboardEntry>) {
+    if (storyboard.isEmpty()) return
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Alert Storyboard", style = MaterialTheme.typography.titleLarge)
+            storyboard.forEachIndexed { index, entry ->
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text("${'$'}{entry.formattedTimestamp()} — ${'$'}{entry.summary}", fontWeight = FontWeight.SemiBold)
+                    Text(entry.detail, style = MaterialTheme.typography.bodySmall)
+                    if (index < storyboard.lastIndex) {
+                        Divider(modifier = Modifier.padding(vertical = 4.dp))
+                    }
+                }
+            }
         }
     }
 }

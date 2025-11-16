@@ -7,5 +7,7 @@ backend/dist/*
 frontend/dist/*
 !frontend/dist/.gitkeep
 build/
+.gradle/
+**/.gradle/
 .DS_Store
 *.log
