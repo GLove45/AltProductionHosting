@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="#0A0F1F"
+    android:padding="16dp"
+    android:layout_marginBottom="12dp"
+    android:elevation="4dp">
+
+    <TextView
+        android:id="@+id/node_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="#E5E5FF"
+        android:textSize="14sp"
+        android:text="node1.alt-labs.internal" />
+
+    <TextView
+        android:id="@+id/node_role"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="#A0A0A0"
+        android:textSize="12sp"
+        android:text="Role" />
+
+    <TextView
+        android:id="@+id/node_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="#00CFFF"
+        android:textSize="12sp"
+        android:text="Healthy"
+        android:paddingTop="4dp" />
+</LinearLayout>
