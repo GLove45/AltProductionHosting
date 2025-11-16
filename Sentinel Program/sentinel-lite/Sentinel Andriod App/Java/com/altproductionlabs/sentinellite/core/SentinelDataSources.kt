@@ -18,6 +18,7 @@ interface SentinelStatusDataSource {
 
 interface SentinelPolicyDataSource {
     fun observeSecurityState(): Flow<SecurityState>
+    fun observeDeviceOwnerState(): Flow<DeviceOwnerState>
 }
 
 sealed class SimulationScenario(val id: String, val label: String, val description: String) {

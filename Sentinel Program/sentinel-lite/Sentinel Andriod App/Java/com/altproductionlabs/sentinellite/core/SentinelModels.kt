@@ -133,6 +133,43 @@ data class SecurityState(
     val auditLog: List<AuditLogEvent>
 )
 
+data class DeviceOwnerState(
+    val adminName: String,
+    val isDeviceOwner: Boolean,
+    val enrolledAt: Long?,
+    val lastVerifiedAt: Long?,
+    val loginState: AdminLoginState,
+    val policies: List<AdminPolicy>,
+    val monitoredApps: List<MonitoredApp>
+)
+
+data class AdminLoginState(
+    val locked: Boolean,
+    val failureCount: Int,
+    val lastFailureAt: Long?,
+    val lastSuccessAt: Long?,
+    val requiredFactors: List<TokenType>
+)
+
+data class AdminPolicy(
+    val id: String,
+    val title: String,
+    val description: String,
+    val enforced: Boolean,
+    val lastUpdated: Long,
+    val violations: Int
+)
+
+enum class PolicyStatus { COMPLIANT, WARNING, BLOCKED }
+
+data class MonitoredApp(
+    val packageName: String,
+    val label: String,
+    val status: PolicyStatus,
+    val lastEventAt: Long,
+    val notes: String
+)
+
 data class AuditLogEvent(
     val id: String,
     val message: String,
