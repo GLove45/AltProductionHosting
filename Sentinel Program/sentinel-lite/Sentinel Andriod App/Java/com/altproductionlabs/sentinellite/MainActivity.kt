@@ -50,9 +50,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun switchFragment(fragment: Fragment, title: String) {
-        toolbar.title = "Sentinel Lite – $title"
+        setToolbarTitle(title)
         supportFragmentManager.beginTransaction()
             .replace(R.id.content_container, fragment)
             .commit()
+    }
+
+    fun setToolbarTitle(title: String) {
+        toolbar.title = "Sentinel Lite – $title"
     }
 }

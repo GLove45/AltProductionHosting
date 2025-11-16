@@ -13,22 +13,22 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Alert Feed"
+            android:text="Simulation Lab"
             android:textColor="#FF00B7"
-            android:textSize="22sp"
+            android:textSize="24sp"
             android:textStyle="bold"
-            android:paddingBottom="8dp" />
+            android:paddingBottom="12dp" />
 
         <TextView
-            android:id="@+id/alerts_summary"
+            android:id="@+id/simulation_description"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="0 alerts"
             android:textColor="#E5E5FF"
+            android:text="Select a scenario to inject signals into the rules engine."
             android:paddingBottom="12dp" />
 
         <LinearLayout
-            android:id="@+id/alerts_list"
+            android:id="@+id/scenario_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical" />

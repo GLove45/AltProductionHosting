@@ -6,7 +6,8 @@
     android:background="#0A0F1F"
     android:padding="16dp"
     android:layout_marginBottom="12dp"
-    android:elevation="4dp">
+    android:elevation="4dp"
+    android:gravity="center_vertical">
 
     <ImageView
         android:layout_width="32dp"
@@ -23,7 +24,7 @@
 
         <TextView
             android:id="@+id/alert_title"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="#E5E5FF"
             android:textSize="14sp"
@@ -31,10 +32,17 @@
 
         <TextView
             android:id="@+id/alert_meta"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="#A0A0A0"
             android:textSize="12sp"
             android:text="P1 • node • 2 min ago" />
     </LinearLayout>
+
+    <Button
+        android:id="@+id/alert_ack_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Ack"
+        android:textAllCaps="false" />
 </LinearLayout>

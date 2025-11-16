@@ -10,7 +10,6 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Sentinel neon wolf header -->
         <ImageView
             android:id="@+id/header_icon"
             android:layout_width="120dp"
@@ -31,8 +30,8 @@
             android:paddingTop="8dp"
             android:paddingBottom="16dp" />
 
-        <!-- Risk Score Card -->
         <LinearLayout
+            android:id="@+id/risk_card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
@@ -44,7 +43,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Cluster Risk Score"
+                android:text="Device Risk Score"
                 android:textColor="#E5E5FF"
                 android:textSize="14sp" />
 
@@ -57,9 +56,17 @@
                 android:textSize="48sp"
                 android:textStyle="bold"
                 android:paddingTop="4dp" />
+
+            <TextView
+                android:id="@+id/risk_factors"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Factors: --"
+                android:textColor="#9AA1B9"
+                android:textSize="13sp"
+                android:paddingTop="4dp" />
         </LinearLayout>
 
-        <!-- Cluster summary line that DashboardFragment is looking for -->
         <TextView
             android:id="@+id/summary_stats"
             android:layout_width="match_parent"
@@ -69,16 +76,112 @@
             android:textSize="14sp"
             android:paddingBottom="16dp" />
 
+        <LinearLayout
+            android:id="@+id/network_card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="#0C1F30"
+            android:padding="16dp"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Network Posture"
+                android:textColor="#FF00B7"
+                android:textStyle="bold"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/network_ssid"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Wi-Fi: --"
+                android:textColor="#E5E5FF"
+                android:paddingTop="8dp" />
+
+            <TextView
+                android:id="@+id/network_security"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Security: --"
+                android:textColor="#9AA1B9" />
+
+            <TextView
+                android:id="@+id/network_vpn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="VPN: --"
+                android:textColor="#9AA1B9" />
+
+            <TextView
+                android:id="@+id/network_issues"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Issues: --"
+                android:textColor="#FF9C66"
+                android:paddingTop="4dp" />
+
+            <Button
+                android:id="@+id/capture_evidence_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Capture Wi-Fi Evidence"
+                android:textAllCaps="false"
+                android:layout_marginTop="8dp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/monitoring_card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="#111933"
+            android:padding="16dp"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Monitoring Insights"
+                android:textColor="#FF00B7"
+                android:textStyle="bold"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/monitoring_summary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Gathering data…"
+                android:textColor="#E5E5FF"
+                android:paddingTop="8dp" />
+
+            <TextView
+                android:id="@+id/integrity_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Integrity: --"
+                android:textColor="#9AA1B9" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/refresh_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Refresh Sensors"
+            android:textAllCaps="false"
+            android:layout_marginBottom="16dp" />
+
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Latest Alerts"
+            android:text="Live Alerts"
             android:textColor="#FF00B7"
             android:textSize="18sp"
             android:textStyle="bold"
             android:paddingBottom="8dp" />
 
-        <!-- Container that DashboardFragment fills -->
         <LinearLayout
             android:id="@+id/alerts_container"
             android:layout_width="match_parent"
