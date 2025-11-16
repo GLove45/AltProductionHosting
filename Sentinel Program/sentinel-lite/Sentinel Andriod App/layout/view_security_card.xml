@@ -16,6 +16,7 @@
         android:src="@drawable/ic_shield" />
 
     <LinearLayout
+        android:id="@+id/security_card_content"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
@@ -37,5 +38,13 @@
             android:textColor="#A0A0A0"
             android:textSize="12sp"
             android:text="Details" />
+
+        <TextView
+            android:id="@+id/security_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#4DD0E1"
+            android:textSize="12sp"
+            android:text="Status" />
     </LinearLayout>
 </LinearLayout>
