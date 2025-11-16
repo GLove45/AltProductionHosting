@@ -1,0 +1,47 @@
+{
+  "mission_name": "High-Overwatch OSNIT",
+  "statement": "Create an always-on reconnaissance layer that keeps Alt Production Hosting informed about emerging physical, social, and infrastructure threats.",
+  "objectives": [
+    {
+      "title": "Protect strategic infrastructure",
+      "detail": "Track chatter that references datacenters, relay points, or hosting nodes tied to Alt Production Hosting."
+    },
+    {
+      "title": "Detect hostile coordination",
+      "detail": "Surface clusters of actors who signal coordinated action across Telegram, dark web forums, or mainstream social media."
+    },
+    {
+      "title": "Maintain executive awareness",
+      "detail": "Package every investigation with mission status, severity, confidence, and recommended actions so leadership can respond instantly."
+    }
+  ],
+  "scope": {
+    "regions": ["North America", "Latin America", "European Union"],
+    "channels": ["Telegram", "Twitter", "Dark Web paste bins", "Email Leaks", "Broadcast media"],
+    "time_horizon_hours": 72
+  },
+  "watchlist": [
+    "Sentinel Override",
+    "GhostCat Collective",
+    "Black Lattice",
+    "Alt Production Hosting",
+    "EdgeRelay-14"
+  ],
+  "critical_assets": [
+    "Command Grid Alpha",
+    "Global CDN mesh",
+    "Zion Phone OS early-access devices",
+    "Sentinel Program control plane"
+  ],
+  "alert_thresholds": {
+    "critical": 90,
+    "high": 70,
+    "medium": 50,
+    "low": 30
+  },
+  "reporting": {
+    "high_verbose": true,
+    "include_watchlist_matrix": true,
+    "include_timeline": true
+  }
+}

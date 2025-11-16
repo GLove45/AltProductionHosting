@@ -52,6 +52,16 @@ After running the script, configure a process manager (for example, systemd or P
 - [`docs/`](docs/) – Architecture, module guides, deployment notes, and operational checklists.
 - [`scripts/`](scripts/) – Reserved for automation helpers (seeders, cron jobs).
 
+### High-Overwatch OSNIT mission console
+
+Run [`scripts/osnit_watch.py`](scripts/osnit_watch.py) to produce the "High-Overwatch OSNIT" report highlighted in the stakeholder briefing. The script ingests the mission profile (`docs/osnit/mission_profile.json`) and current feed captures (`docs/osnit/sample_feeds.json`) and outputs a high-verbosity narrative with analytics, watchlist matrices, and prioritized actions.
+
+```bash
+./scripts/osnit_watch.py --mission docs/osnit/mission_profile.json --feeds docs/osnit/sample_feeds.json
+```
+
+Use `--top` to change how many of the highest-scoring events appear in the dossier and `--summary-json <path>` to export a machine-readable digest alongside the console transcript.
+
 ## Documentation map
 
 - [Architecture](docs/architecture.md)
