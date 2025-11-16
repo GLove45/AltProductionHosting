@@ -17,6 +17,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        viewModel.initialize(this)
         setContent {
             MaterialTheme {
                 Surface {
@@ -28,7 +29,11 @@ class MainActivity : ComponentActivity() {
                         onRevokeDevice = { viewModel.revokeDevice(this) },
                         onToggleLockdown = { viewModel.toggleLockdown() },
                         onNetworkTest = { viewModel.testNetworkConnectivity(this) },
-                        onQuarantine = { viewModel.quarantine(this) }
+                        onQuarantine = { viewModel.quarantine(this) },
+                        onRefreshSecurity = { viewModel.refreshSecurityPosture(this) },
+                        onToggleAlerts = { viewModel.toggleAlerting(this) },
+                        onToggleAutoIsolation = { viewModel.toggleIsolationAutomation(this) },
+                        onToggleRiskMfa = { viewModel.toggleRiskMfa(this) }
                     )
                 }
             }

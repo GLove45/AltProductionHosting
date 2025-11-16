@@ -3,14 +3,18 @@ package com.sentinel.control.ui
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sentinel.control.data.AlertSettingsStore
 import com.sentinel.control.data.ApprovalTokenStore
 import com.sentinel.control.data.DeviceRegistrationManager
 import com.sentinel.control.logging.AuditLog
 import com.sentinel.control.logging.SentinelLogger
+import com.sentinel.control.logging.SecurityAlertNotifier
 import com.sentinel.control.mfa.MfaPolicyEngine
 import com.sentinel.control.network.NetworkDiagnostics
 import com.sentinel.control.network.SentinelApi
 import com.sentinel.control.security.DeviceKeyManager
+import com.sentinel.control.security.intel.ActiveDefenseController
+import com.sentinel.control.security.intel.SecurityIntelligenceCoordinator
 import com.sentinel.control.telemetry.BehavioralTelemetry
 import com.sentinel.control.util.ThreatHygieneChecker
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,6 +29,45 @@ class SentinelViewModel : ViewModel() {
     private val logger = SentinelLogger
     private val mfaPolicyEngine = MfaPolicyEngine()
     private val hygieneChecker = ThreatHygieneChecker()
+    private var initialized = false
+
+    fun initialize(activity: FragmentActivity) {
+        if (initialized) return
+        initialized = true
+        viewModelScope.launch {
+            val store = AlertSettingsStore(activity)
+            val settings = store.load()
+            _uiState.value = _uiState.value.copy(
+                alertSettings = settings,
+                auditEvents = AuditLog.readEntries(activity)
+            )
+            refreshSecurityPosture(activity)
+        }
+    }
+
+    fun refreshSecurityPosture(activity: FragmentActivity) {
+        viewModelScope.launch {
+            val coordinator = SecurityIntelligenceCoordinator(activity)
+            val report = coordinator.collect()
+            val settings = _uiState.value.alertSettings
+            _uiState.value = _uiState.value.copy(
+                securityScore = report.score,
+                alertStoryboard = report.storyboard,
+                hygieneStatus = report.hygieneReport,
+                threatSurface = report.threatSurface,
+                integrityReport = report.integrity,
+                networkIntel = report.network,
+                lastError = null
+            )
+            if (settings.isolationOnThreat && report.score.overall < 55) {
+                ActiveDefenseController(activity).enterIsolation()
+            }
+            if (settings.requireMfaOnThreat && report.score.overall < 65) {
+                mfaPolicyEngine.enforcePinRequirement(activity, true)
+            }
+            SecurityAlertNotifier.publish(activity, report, settings)
+        }
+    }
 
     fun onApprove(activity: FragmentActivity) {
         viewModelScope.launch {
@@ -38,7 +81,12 @@ class SentinelViewModel : ViewModel() {
                 return@launch
             }
 
-            val policyResult = mfaPolicyEngine.collect(activity)
+            val requiredFactors = when {
+                _uiState.value.alertSettings.requireMfaOnThreat && (_uiState.value.securityScore?.overall
+                    ?: 100) < 70 -> 3
+                else -> 1
+            }
+            val policyResult = mfaPolicyEngine.collect(activity, requiredFactors)
             if (!policyResult.isSuccessful) {
                 logger.warn("MFA policy failed: ${'$'}{policyResult.reason}")
                 _uiState.value = _uiState.value.copy(lastError = policyResult.reason)
@@ -114,6 +162,7 @@ class SentinelViewModel : ViewModel() {
                 lastError = response.error,
                 auditEvents = AuditLog.readEntries(activity)
             )
+            refreshSecurityPosture(activity)
         }
     }
 
@@ -122,6 +171,33 @@ class SentinelViewModel : ViewModel() {
             val diagnostics = NetworkDiagnostics(activity)
             val result = diagnostics.check()
             _uiState.value = _uiState.value.copy(networkStatus = result)
+        }
+    }
+
+    fun toggleAlerting(activity: FragmentActivity) {
+        viewModelScope.launch {
+            val store = AlertSettingsStore(activity)
+            val updated = store.update { it.copy(pushEnabled = !it.pushEnabled) }
+            _uiState.value = _uiState.value.copy(alertSettings = updated)
+        }
+    }
+
+    fun toggleIsolationAutomation(activity: FragmentActivity) {
+        viewModelScope.launch {
+            val store = AlertSettingsStore(activity)
+            val updated = store.update { it.copy(isolationOnThreat = !it.isolationOnThreat) }
+            _uiState.value = _uiState.value.copy(alertSettings = updated)
+        }
+    }
+
+    fun toggleRiskMfa(activity: FragmentActivity) {
+        viewModelScope.launch {
+            val store = AlertSettingsStore(activity)
+            val updated = store.update { it.copy(requireMfaOnThreat = !it.requireMfaOnThreat) }
+            if (!updated.requireMfaOnThreat) {
+                mfaPolicyEngine.enforcePinRequirement(activity, false)
+            }
+            _uiState.value = _uiState.value.copy(alertSettings = updated)
         }
     }
 }
