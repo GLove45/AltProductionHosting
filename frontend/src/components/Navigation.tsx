@@ -19,8 +19,11 @@ export const Navigation = ({ devMode, onToggleDevMode }: NavigationProps) => {
   return (
     <header className={`navigation ${isMenuOpen ? 'open' : ''}`}>
       <div className="branding" aria-label="Alt Production Hosting">
-        <span className="branding-text">ALT PRODUCTION</span>
-        <span className="branding-subtitle">hosting intelligence</span>
+        <span className="branding-glyph">A</span>
+        <div className="branding-copy">
+          <span className="branding-text">Alt Production Hosting</span>
+          <span className="branding-subtitle">Sovereign domain control</span>
+        </div>
       </div>
 
       <button
@@ -37,8 +40,10 @@ export const Navigation = ({ devMode, onToggleDevMode }: NavigationProps) => {
 
       <nav className="navigation-links">
         <Link to="/" className={location.pathname === '/' ? 'active' : ''}>
-          Dashboard
+          Domains
         </Link>
+        <a href="#security-stack">Security</a>
+        <a href="#analytics">Analytics</a>
         {user ? (
           <>
             <span className="user-pill" aria-label="Logged in user">
@@ -66,6 +71,9 @@ export const Navigation = ({ devMode, onToggleDevMode }: NavigationProps) => {
           />
           <span>Dev mode</span>
         </label>
+        <Link to="/" className="cta-pill">
+          Start free scan
+        </Link>
       </nav>
     </header>
   );
