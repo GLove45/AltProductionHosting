@@ -1,3 +1,4 @@
+import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -200,6 +201,23 @@ vi.mock('../src/services/apiClient', () => {
   };
 });
 
+vi.mock('../src/contexts/AuthContext', () => {
+  const authValue = {
+    user: { id: 'demo-user', username: 'demo', role: 'admin' },
+    tokens: null,
+    isLoading: false,
+    login: vi.fn(),
+    logout: vi.fn(),
+    refreshProfile: vi.fn(),
+    updatePassword: vi.fn()
+  };
+
+  return {
+    useAuth: () => authValue,
+    AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>
+  };
+});
+
 const renderApp = () => {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -225,24 +243,24 @@ describe('frontend load sense check', () => {
 
     const dashboardHeading = await screen.findByRole('heading', {
       level: 1,
-      name: /your hosting dashboard/i
+      name: /domain control dashboard/i
     });
     expect(dashboardHeading).toBeInTheDocument();
 
     const navigation = screen.getByRole('navigation');
     expect(navigation).toBeInTheDocument();
-    expect(within(navigation).getByRole('link', { name: /dashboard/i })).toBeInTheDocument();
+    expect(within(navigation).getByRole('link', { name: /domains/i })).toBeInTheDocument();
 
     const seoHeading = await screen.findByRole('heading', {
       level: 2,
-      name: /seo service intelligence/i
+      name: /domain performance studio/i
     });
     expect(seoHeading).toBeInTheDocument();
 
-    const domainPanel = await screen.findByRole('heading', {
+    const domainPanels = await screen.findAllByRole('heading', {
       level: 3,
       name: /example.com/i
     });
-    expect(domainPanel).toBeInTheDocument();
+    expect(domainPanels.length).toBeGreaterThan(0);
   });
 });

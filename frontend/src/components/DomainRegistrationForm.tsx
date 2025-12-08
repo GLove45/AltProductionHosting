@@ -44,6 +44,7 @@ export const DomainRegistrationForm = () => {
   if (user.role !== 'admin') {
     return (
       <article className="info-card">
+        <p className="eyebrow">Domain onboarding</p>
         <h3>Domain registration</h3>
         <p>You need administrator privileges to connect new domains.</p>
       </article>
@@ -52,8 +53,12 @@ export const DomainRegistrationForm = () => {
 
   return (
     <article className="domain-registration">
-      <h3>Add a new domain</h3>
-      <p>Submit a domain to begin verification and analytics tracking.</p>
+      <p className="eyebrow">Domain onboarding</p>
+      <h3>Register & verify</h3>
+      <p className="form-lead">
+        Trigger the Python registrar agent to claim DNS, write nginx, request certbot, and wire AWStats
+        telemetry in one move.
+      </p>
       <form onSubmit={handleSubmit} className="domain-registration-form">
         <label>
           Domain name
@@ -83,6 +88,7 @@ export const DomainRegistrationForm = () => {
           {mutation.isPending ? 'Registering…' : 'Register domain'}
         </button>
       </form>
+      <p className="form-hint">Includes consent-check endpoint and automatic TLS renewals.</p>
     </article>
   );
 };

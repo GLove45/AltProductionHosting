@@ -16,17 +16,22 @@ export const DomainPerformancePanel = ({
   isLoading,
   isError
 }: DomainPerformancePanelProps) => {
+  const periodLabel = analytics
+    ? `${analytics.awstats.period.month} ${analytics.awstats.period.year}`
+    : 'Telemetry pending';
+
   return (
-    <article className="domain-card">
+    <article className="domain-card domain-card-modern">
       <header className="domain-card-header">
         <div>
+          <p className="eyebrow">{periodLabel}</p>
           <h3>{domain.name}</h3>
           <p>
-            Registrar: <strong>{domain.registrarProvider}</strong> · Status:{' '}
-            <span className={`status-pill status-${domain.status}`}>{domain.status}</span>
+            Registrar: <strong>{domain.registrarProvider}</strong>
           </p>
         </div>
         <div className="domain-metadata">
+          <span className={`status-pill status-${domain.status}`}>{domain.status}</span>
           <span>Tracking since {new Date(domain.createdAt).toLocaleDateString()}</span>
           {domain.verifiedAt ? (
             <span>Verified {new Date(domain.verifiedAt).toLocaleDateString()}</span>
@@ -46,48 +51,30 @@ export const DomainPerformancePanel = ({
 
       {analytics && !isLoading && !isError && (
         <div className="domain-analytics-grid">
-          <section className="awstats-overview">
-            <header>
-              <h4>
-                AWStats snapshot · {analytics.awstats.period.month} {analytics.awstats.period.year}
-              </h4>
-              <p>Visitor behaviour, engagement, and resource consumption by the numbers.</p>
-            </header>
-            <div className="stat-grid">
-              <div className="stat-cell">
-                <span className="stat-label">Visits</span>
-                <span className="stat-value">{formatNumber(analytics.awstats.totals.visits)}</span>
-              </div>
-              <div className="stat-cell">
-                <span className="stat-label">Unique visitors</span>
-                <span className="stat-value">
-                  {formatNumber(analytics.awstats.totals.uniqueVisitors)}
-                </span>
-              </div>
-              <div className="stat-cell">
-                <span className="stat-label">Pages viewed</span>
-                <span className="stat-value">{formatNumber(analytics.awstats.totals.pages)}</span>
-              </div>
-              <div className="stat-cell">
-                <span className="stat-label">Hits</span>
-                <span className="stat-value">{formatNumber(analytics.awstats.totals.hits)}</span>
-              </div>
-              <div className="stat-cell">
-                <span className="stat-label">Bandwidth</span>
-                <span className="stat-value">{formatNumber(analytics.awstats.totals.bandwidthMb)} MB</span>
-              </div>
-              <div className="stat-cell">
-                <span className="stat-label">Avg. visit duration</span>
-                <span className="stat-value">{analytics.awstats.totals.avgVisitDuration}</span>
-              </div>
-              <div className="stat-cell">
-                <span className="stat-label">Bounce rate</span>
-                <span className="stat-value">{analytics.awstats.totals.bounceRate}%</span>
-              </div>
+          <div className="signal-grid">
+            <div className="signal-card">
+              <p className="signal-label">SEO health</p>
+              <p className="signal-value">{analytics.seo.healthScore}</p>
+              <p className="signal-subtext">Lighthouse perf {analytics.seo.lighthouse.performance}/100</p>
             </div>
+            <div className="signal-card">
+              <p className="signal-label">Visits this period</p>
+              <p className="signal-value">{formatNumber(analytics.awstats.totals.visits)}</p>
+              <p className="signal-subtext">Unique {formatNumber(analytics.awstats.totals.uniqueVisitors)}</p>
+            </div>
+            <div className="signal-card">
+              <p className="signal-label">Bandwidth</p>
+              <p className="signal-value">{formatNumber(analytics.awstats.totals.bandwidthMb)} MB</p>
+              <p className="signal-subtext">Bounce rate {analytics.awstats.totals.bounceRate}%</p>
+            </div>
+          </div>
 
+          <section className="awstats-overview condensed">
+            <header>
+              <h4>Traffic mix</h4>
+              <p>Top sources feeding the stack.</p>
+            </header>
             <div className="traffic-sources">
-              <h5>Traffic sources</h5>
               <ul>
                 {analytics.awstats.trafficSources.map((source) => (
                   <li key={source.source}>
@@ -99,80 +86,66 @@ export const DomainPerformancePanel = ({
                 ))}
               </ul>
             </div>
+            <div className="stat-grid">
+              <div className="stat-cell">
+                <span className="stat-label">Pages</span>
+                <span className="stat-value">{formatNumber(analytics.awstats.totals.pages)}</span>
+              </div>
+              <div className="stat-cell">
+                <span className="stat-label">Hits</span>
+                <span className="stat-value">{formatNumber(analytics.awstats.totals.hits)}</span>
+              </div>
+              <div className="stat-cell">
+                <span className="stat-label">Avg duration</span>
+                <span className="stat-value">{analytics.awstats.totals.avgVisitDuration}</span>
+              </div>
+            </div>
           </section>
 
-          <section className="top-assets">
+          <section className="top-assets compact">
             <div>
               <h4>Top pages</h4>
               <ul>
-                {analytics.awstats.topPages.map((page) => (
+                {analytics.awstats.topPages.slice(0, 3).map((page) => (
                   <li key={page.url}>
                     <span className="list-primary">{page.url}</span>
                     <span className="list-secondary">
-                      {formatNumber(page.views)} views · Entry {page.entryRate}% · Exit {page.exitRate}%
+                      {formatNumber(page.views)} views · Entry {page.entryRate}%
                     </span>
                   </li>
                 ))}
               </ul>
             </div>
             <div>
-              <h4>Top keywords</h4>
+              <h4>Keywords</h4>
               <ul>
-                {analytics.awstats.topKeywords.map((keyword) => (
-                  <li key={keyword.keyword}>
-                    <span className="list-primary">{keyword.keyword}</span>
-                    <span className="list-secondary">
-                      {formatNumber(keyword.visits)} visits · Rank #{keyword.position}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h4>Referrers & locations</h4>
-              <ul>
-                {analytics.awstats.topReferrers.map((referrer) => (
-                  <li key={referrer.source}>
-                    <span className="list-primary">{referrer.source}</span>
-                    <span className="list-secondary">
-                      {formatNumber(referrer.visits)} visits · {referrer.type}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              <ul>
-                {analytics.awstats.topCountries.map((country) => (
-                  <li key={country.country}>
-                    <span className="list-primary">{country.country}</span>
-                    <span className="list-secondary">
-                      {formatNumber(country.visits)} visits · {formatNumber(country.bandwidthMb)} MB
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </section>
-
-          <section className="seo-deep-dive">
-            <div className="seo-detail">
-              <h4>Keyword monitoring</h4>
-              <p>
-                Tracking {analytics.seo.keywordRankings.length} priority keywords with twice-daily
-                SERP checks and intent clustering.
-              </p>
-              <ul>
-                {analytics.seo.keywordRankings.slice(0, 4).map((keyword) => (
+                {analytics.seo.keywordRankings.slice(0, 3).map((keyword) => (
                   <li key={keyword.keyword}>
                     <span className="list-primary">{keyword.keyword}</span>
                     <span className="list-secondary">
                       #{keyword.position} · Δ {keyword.change >= 0 ? '+' : ''}
-                      {keyword.change} · {keyword.searchVolume.toLocaleString()} searches/mo
+                      {keyword.change}
                     </span>
                   </li>
                 ))}
               </ul>
             </div>
+            <div>
+              <h4>Reliability</h4>
+              <ul>
+                {analytics.awstats.httpStatus.slice(0, 3).map((status) => (
+                  <li key={status.code}>
+                    <span className="list-primary">{status.code}</span>
+                    <span className="list-secondary">
+                      {status.description} · {formatNumber(status.count)} events
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
 
+          <section className="seo-deep-dive compact">
             <div className="seo-detail">
               <h4>Backlink authority</h4>
               <p>
@@ -189,28 +162,13 @@ export const DomainPerformancePanel = ({
             </div>
 
             <div className="seo-detail">
-              <h4>Lighthouse quality</h4>
-              <ul className="lighthouse-grid">
-                <li>
-                  Performance <span>{analytics.seo.lighthouse.performance}</span>
-                </li>
-                <li>
-                  Accessibility <span>{analytics.seo.lighthouse.accessibility}</span>
-                </li>
-                <li>
-                  Best practices <span>{analytics.seo.lighthouse.bestPractices}</span>
-                </li>
-                <li>
-                  SEO <span>{analytics.seo.lighthouse.seo}</span>
-                </li>
-              </ul>
-              <h4>HTTP status distribution</h4>
+              <h4>Structured data</h4>
               <ul>
-                {analytics.awstats.httpStatus.map((status) => (
-                  <li key={status.code}>
-                    <span className="list-primary">{status.code}</span>
-                    <span className="list-secondary">
-                      {status.description} · {formatNumber(status.count)} events
+                {analytics.seo.structuredData.map((schema) => (
+                  <li key={schema.schemaType}>
+                    <span className="list-primary">{schema.schemaType}</span>
+                    <span className={`schema-status schema-${schema.status}`}>
+                      {schema.status}
                     </span>
                   </li>
                 ))}

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alt Production Hosting | Domain Registration & Control</title>
+  <link rel="stylesheet" href="styles/main.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="logo">Alt Production Hosting</div>
+    <nav class="nav">
+      <a href="#features">Features</a>
+      <a href="#packages">Packages</a>
+      <a href="#dashboard">Dashboard</a>
+      <a class="cta" href="#register">Register</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" id="register">
+      <div class="hero__copy">
+        <p class="pill">Self-hosted control with cloud-grade polish</p>
+        <h1>Register domains, manage hosting, and monitor uptime — all from one page.</h1>
+        <p class="lede">
+          A streamlined, JavaScript-only front-end that sends your requests straight to our Python automation
+          pipeline. No extra installers, just a clean experience to register domains and manage multi-domain packages.
+        </p>
+        <div class="hero__actions">
+          <button class="btn primary" id="open-register">Start registration</button>
+          <button class="btn ghost" id="open-dashboard">View dashboard preview</button>
+        </div>
+        <div class="hero__stats">
+          <div class="stat">
+            <div class="stat__value" id="stat-active-domains">0</div>
+            <div class="stat__label">Active domains</div>
+          </div>
+          <div class="stat">
+            <div class="stat__value" id="stat-uptime">99.99%</div>
+            <div class="stat__label">Uptime target</div>
+          </div>
+          <div class="stat">
+            <div class="stat__value" id="stat-transfer">Unmetered</div>
+            <div class="stat__label">Transfer on all plans</div>
+          </div>
+        </div>
+      </div>
+      <div class="panel" id="app"></div>
+    </section>
+
+    <section class="grid" id="features">
+      <article class="card">
+        <div class="pill pill--success">Domains</div>
+        <h3>Register instantly</h3>
+        <p>Submit domain + contact details and we hand off to our Python process that handles DNS, SSL, and nginx setup.</p>
+      </article>
+      <article class="card">
+        <div class="pill pill--warning">Packages</div>
+        <h3>Bundle and scale</h3>
+        <p>Attach multiple domains to lightweight 10 GB packages or scale to premium storage without moving your data.</p>
+      </article>
+      <article class="card">
+        <div class="pill pill--info">Control</div>
+        <h3>Single dashboard</h3>
+        <p>Track health, switch packages, and view DNS/SSL status from one dashboard view — no extra logins required.</p>
+      </article>
+    </section>
+
+    <section class="packages" id="packages">
+      <h2>Packages that fit every domain stack</h2>
+      <div class="package-grid">
+        <div class="package-card">
+          <p class="pill pill--neutral">Starter</p>
+          <h3>10 GB · up to 6 domains</h3>
+          <ul>
+            <li>Unmetered transfer</li>
+            <li>Daily backups</li>
+            <li>DNS + SSL automation</li>
+          </ul>
+          <p class="price">£8 / mo</p>
+        </div>
+        <div class="package-card featured">
+          <p class="pill pill--success">Growth</p>
+          <h3>50 GB · up to 15 domains</h3>
+          <ul>
+            <li>Priority SSL issuance</li>
+            <li>Bot-friendly SEO options</li>
+            <li>Staging + production slots</li>
+          </ul>
+          <p class="price">£18 / mo</p>
+        </div>
+        <div class="package-card">
+          <p class="pill pill--info">Pro</p>
+          <h3>200 GB · unlimited domains</h3>
+          <ul>
+            <li>Edge caching</li>
+            <li>Advanced analytics</li>
+            <li>24/7 response</li>
+          </ul>
+          <p class="price">£44 / mo</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="integration" id="integration">
+      <div class="integration__copy">
+        <p class="pill">API handoff</p>
+        <h2>Ready for your Python automation</h2>
+        <p>
+          Forms here make simple JSON POSTs, ready to be wired into your Python scripts that configure DNS, nginx,
+          certificates, and consent control. Use the sample request formats to connect the hand-off.
+        </p>
+        <pre><code>POST /api/users
+{
+  "name": "Ada Lovelace",
+  "email": "ada@example.com",
+  "password": "secure-pass"
+}
+
+POST /api/domains
+{
+  "domain": "example.com",
+  "package": "starter",
+  "allowGoogle": true,
+  "allowBing": false
+}
+</code></pre>
+      </div>
+      <div class="integration__status">
+        <div class="callout">
+          <h3>Dashboard preview</h3>
+          <p>Use the dashboard to see domains, package allocations, and DNS/SSL state.</p>
+          <ul id="integration-signals"></ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Alt Production Hosting · Domain automation made simple.</p>
+  </footer>
+
+  <script type="module" src="scripts/app.js"></script>
+</body>
+</html>
