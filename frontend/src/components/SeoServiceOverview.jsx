@@ -1,13 +1,8 @@
-import { DomainAnalytics, DomainSeoActionItem, DomainSeoIssue } from '../types/domain';
+import PropTypes from 'prop-types';
 
-type SeoServiceOverviewProps = {
-  analytics: DomainAnalytics[];
-  loading: boolean;
-};
+const formatPercent = (value) => `${value}%`;
 
-const formatPercent = (value: number) => `${value}%`;
-
-const getAverage = (values: number[]) => {
+const getAverage = (values) => {
   if (!values.length) {
     return 0;
   }
@@ -15,21 +10,21 @@ const getAverage = (values: number[]) => {
   return Math.round(total / values.length);
 };
 
-const sortByPriority = (items: DomainSeoActionItem[]) =>
+const sortByPriority = (items) =>
   [...items].sort((a, b) => {
-    const priorityOrder = { high: 0, medium: 1, low: 2 } as const;
-    const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
+    const priorityOrder = { high: 0, medium: 1, low: 2 };
+    const priorityDiff = (priorityOrder[a.priority] ?? 3) - (priorityOrder[b.priority] ?? 3);
     if (priorityDiff !== 0) {
       return priorityDiff;
     }
     return a.dueDate.localeCompare(b.dueDate);
   });
 
-const selectTopIssues = (issues: DomainSeoIssue[], limit = 4) =>
+const selectTopIssues = (issues, limit = 4) =>
   [...issues]
     .sort((a, b) => {
-      const severityOrder = { critical: 0, warning: 1, notice: 2 } as const;
-      const severityDiff = severityOrder[a.severity] - severityOrder[b.severity];
+      const severityOrder = { critical: 0, warning: 1, notice: 2 };
+      const severityDiff = (severityOrder[a.severity] ?? 3) - (severityOrder[b.severity] ?? 3);
       if (severityDiff !== 0) {
         return severityDiff;
       }
@@ -37,7 +32,7 @@ const selectTopIssues = (issues: DomainSeoIssue[], limit = 4) =>
     })
     .slice(0, limit);
 
-export const SeoServiceOverview = ({ analytics, loading }: SeoServiceOverviewProps) => {
+export const SeoServiceOverview = ({ analytics, loading = false }) => {
   if (loading) {
     return (
       <section className="seo-service">
@@ -73,12 +68,8 @@ export const SeoServiceOverview = ({ analytics, loading }: SeoServiceOverviewPro
   const aggregatedIssues = analytics.flatMap((item) => item.seo.issues);
   const aggregatedActionPlan = sortByPriority(analytics.flatMap((item) => item.seo.actionPlan));
   const criticalIssues = selectTopIssues(aggregatedIssues);
-  const serpFeatures = Array.from(
-    new Set(analytics.flatMap((item) => item.seo.serpFeatures))
-  ).slice(0, 6);
-  const monitoringCapabilities = Array.from(
-    new Set(analytics.flatMap((item) => item.seo.monitoringCapabilities))
-  );
+  const serpFeatures = Array.from(new Set(analytics.flatMap((item) => item.seo.serpFeatures))).slice(0, 6);
+  const monitoringCapabilities = Array.from(new Set(analytics.flatMap((item) => item.seo.monitoringCapabilities)));
 
   const numberFormatter = new Intl.NumberFormat();
 
@@ -87,9 +78,8 @@ export const SeoServiceOverview = ({ analytics, loading }: SeoServiceOverviewPro
       <header className="section-header">
         <h2>SEO service intelligence</h2>
         <p>
-          Unified SEO operations across {analytics.length} domains with crawl diagnostics, rank
-          tracking, backlink monitoring, and competitor benchmarking delivered in one command
-          center.
+          Unified SEO operations across {analytics.length} domains with crawl diagnostics, rank tracking, backlink monitoring,
+          and competitor benchmarking delivered in one command center.
         </p>
       </header>
 
@@ -117,8 +107,7 @@ export const SeoServiceOverview = ({ analytics, loading }: SeoServiceOverviewPro
             {numberFormatter.format(totalKeywords)} / {numberFormatter.format(totalBacklinks)}
           </span>
           <p className="metric-subtext">
-            Keywords monitored daily alongside {numberFormatter.format(totalReferringDomains)}
-            &nbsp;referring domains.
+            Keywords monitored daily alongside {numberFormatter.format(totalReferringDomains)}&nbsp;referring domains.
           </p>
         </article>
       </div>
@@ -155,9 +144,7 @@ export const SeoServiceOverview = ({ analytics, loading }: SeoServiceOverviewPro
               <li key={action.id} className={`action-item action-${action.status}`}>
                 <div className="action-header">
                   <span className={`status-pill status-${action.status}`}>{action.status}</span>
-                  <span className={`priority-pill priority-${action.priority}`}>
-                    {action.priority} priority
-                  </span>
+                  <span className={`priority-pill priority-${action.priority}`}>{action.priority} priority</span>
                 </div>
                 <h4>{action.title}</h4>
                 <p>{action.impact}</p>
@@ -196,4 +183,26 @@ export const SeoServiceOverview = ({ analytics, loading }: SeoServiceOverviewPro
       </div>
     </section>
   );
+};
+
+SeoServiceOverview.propTypes = {
+  analytics: PropTypes.arrayOf(
+    PropTypes.shape({
+      seo: PropTypes.shape({
+        healthScore: PropTypes.number.isRequired,
+        pageSpeedScore: PropTypes.number.isRequired,
+        mobileUsabilityScore: PropTypes.number.isRequired,
+        keywordRankings: PropTypes.array.isRequired,
+        backlinkProfile: PropTypes.shape({
+          totalBacklinks: PropTypes.number.isRequired,
+          referringDomains: PropTypes.number.isRequired
+        }).isRequired,
+        issues: PropTypes.array.isRequired,
+        actionPlan: PropTypes.array.isRequired,
+        serpFeatures: PropTypes.array.isRequired,
+        monitoringCapabilities: PropTypes.array.isRequired
+      }).isRequired
+    })
+  ).isRequired,
+  loading: PropTypes.bool
 };

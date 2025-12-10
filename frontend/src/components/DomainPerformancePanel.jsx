@@ -1,24 +1,9 @@
-import { Domain } from '../types/domain';
-import { DomainAnalytics } from '../types/domain';
+import PropTypes from 'prop-types';
 
-type DomainPerformancePanelProps = {
-  domain: Domain;
-  analytics?: DomainAnalytics;
-  isLoading: boolean;
-  isError: boolean;
-};
+const formatNumber = (value) => new Intl.NumberFormat().format(value);
 
-const formatNumber = (value: number) => new Intl.NumberFormat().format(value);
-
-export const DomainPerformancePanel = ({
-  domain,
-  analytics,
-  isLoading,
-  isError
-}: DomainPerformancePanelProps) => {
-  const periodLabel = analytics
-    ? `${analytics.awstats.period.month} ${analytics.awstats.period.year}`
-    : 'Telemetry pending';
+export const DomainPerformancePanel = ({ domain, analytics, isLoading, isError }) => {
+  const periodLabel = analytics ? `${analytics.awstats.period.month} ${analytics.awstats.period.year}` : 'Telemetry pending';
 
   return (
     <article className="domain-card domain-card-modern">
@@ -44,8 +29,7 @@ export const DomainPerformancePanel = ({
       {isLoading && <p className="loading-state">Loading analytics intelligence…</p>}
       {isError && (
         <p className="error-state">
-          Unable to load analytics for this domain right now. Retry shortly or review integration
-          status.
+          Unable to load analytics for this domain right now. Retry shortly or review integration status.
         </p>
       )}
 
@@ -119,57 +103,41 @@ export const DomainPerformancePanel = ({
             <div>
               <h4>Keywords</h4>
               <ul>
-                {analytics.seo.keywordRankings.slice(0, 3).map((keyword) => (
+                {analytics.awstats.topKeywords.slice(0, 3).map((keyword) => (
                   <li key={keyword.keyword}>
                     <span className="list-primary">{keyword.keyword}</span>
-                    <span className="list-secondary">
-                      #{keyword.position} · Δ {keyword.change >= 0 ? '+' : ''}
-                      {keyword.change}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h4>Reliability</h4>
-              <ul>
-                {analytics.awstats.httpStatus.slice(0, 3).map((status) => (
-                  <li key={status.code}>
-                    <span className="list-primary">{status.code}</span>
-                    <span className="list-secondary">
-                      {status.description} · {formatNumber(status.count)} events
-                    </span>
+                    <span className="list-secondary">{formatNumber(keyword.visits)} visits</span>
                   </li>
                 ))}
               </ul>
             </div>
           </section>
 
-          <section className="seo-deep-dive compact">
-            <div className="seo-detail">
-              <h4>Backlink authority</h4>
-              <p>
-                {formatNumber(analytics.seo.backlinkProfile.totalBacklinks)} backlinks across{' '}
-                {formatNumber(analytics.seo.backlinkProfile.referringDomains)} referring domains.
-              </p>
+          <section className="seo-insights compact">
+            <div>
+              <h4>Active issues</h4>
               <ul>
-                <li>
-                  Authority score {analytics.seo.backlinkProfile.authorityScore}/100 · New last 30d{' '}
-                  {analytics.seo.backlinkProfile.newLast30Days} · Lost {analytics.seo.backlinkProfile.lostLast30Days}
-                </li>
-                <li>Top anchors: {analytics.seo.backlinkProfile.topAnchorTexts.join(', ')}</li>
+                {analytics.seo.issues.slice(0, 2).map((issue) => (
+                  <li key={issue.id}>
+                    <span className={`issue-pill severity-${issue.severity}`}>{issue.severity}</span>
+                    <div>
+                      <p className="list-primary">{issue.title}</p>
+                      <p className="list-secondary">{issue.recommendation}</p>
+                    </div>
+                  </li>
+                ))}
               </ul>
             </div>
-
-            <div className="seo-detail">
-              <h4>Structured data</h4>
+            <div>
+              <h4>Action plan</h4>
               <ul>
-                {analytics.seo.structuredData.map((schema) => (
-                  <li key={schema.schemaType}>
-                    <span className="list-primary">{schema.schemaType}</span>
-                    <span className={`schema-status schema-${schema.status}`}>
-                      {schema.status}
-                    </span>
+                {analytics.seo.actionPlan.slice(0, 2).map((action) => (
+                  <li key={action.id}>
+                    <span className={`issue-pill severity-${action.priority}`}>{action.priority}</span>
+                    <div>
+                      <p className="list-primary">{action.title}</p>
+                      <p className="list-secondary">Owner: {action.owner}</p>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -179,4 +147,80 @@ export const DomainPerformancePanel = ({
       )}
     </article>
   );
+};
+
+DomainPerformancePanel.propTypes = {
+  domain: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    name: PropTypes.string.isRequired,
+    registrarProvider: PropTypes.string.isRequired,
+    status: PropTypes.string.isRequired,
+    createdAt: PropTypes.string.isRequired,
+    verifiedAt: PropTypes.string,
+    updatedAt: PropTypes.string,
+    verificationToken: PropTypes.string,
+    userId: PropTypes.string
+  }).isRequired,
+  analytics: PropTypes.shape({
+    awstats: PropTypes.shape({
+      period: PropTypes.shape({
+        month: PropTypes.string.isRequired,
+        year: PropTypes.number.isRequired
+      }).isRequired,
+      totals: PropTypes.shape({
+        visits: PropTypes.number,
+        uniqueVisitors: PropTypes.number,
+        pages: PropTypes.number,
+        hits: PropTypes.number,
+        bandwidthMb: PropTypes.number,
+        avgVisitDuration: PropTypes.string,
+        bounceRate: PropTypes.number
+      }).isRequired,
+      trafficSources: PropTypes.arrayOf(
+        PropTypes.shape({
+          source: PropTypes.string,
+          visits: PropTypes.number,
+          change: PropTypes.number,
+          percentage: PropTypes.number
+        })
+      ),
+      topPages: PropTypes.arrayOf(
+        PropTypes.shape({
+          url: PropTypes.string,
+          views: PropTypes.number,
+          entryRate: PropTypes.number,
+          exitRate: PropTypes.number
+        })
+      ),
+      topKeywords: PropTypes.arrayOf(
+        PropTypes.shape({
+          keyword: PropTypes.string,
+          visits: PropTypes.number,
+          position: PropTypes.number
+        })
+      )
+    }).isRequired,
+    seo: PropTypes.shape({
+      healthScore: PropTypes.number,
+      lighthouse: PropTypes.shape({ performance: PropTypes.number }),
+      issues: PropTypes.arrayOf(
+        PropTypes.shape({
+          id: PropTypes.string,
+          title: PropTypes.string,
+          severity: PropTypes.string,
+          recommendation: PropTypes.string
+        })
+      ),
+      actionPlan: PropTypes.arrayOf(
+        PropTypes.shape({
+          id: PropTypes.string,
+          title: PropTypes.string,
+          priority: PropTypes.string,
+          owner: PropTypes.string
+        })
+      )
+    }).isRequired
+  }),
+  isLoading: PropTypes.bool.isRequired,
+  isError: PropTypes.bool.isRequired
 };

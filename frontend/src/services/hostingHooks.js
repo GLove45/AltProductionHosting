@@ -1,25 +1,22 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from './apiClient';
-import { HostingFile, HostingSpace } from '../types/hosting';
 
-const getSpaces = async (userId: string): Promise<HostingSpace[]> => {
+const getSpaces = async (userId) => {
   const { data } = await apiClient.get(`/hosting/spaces`, { params: { userId } });
   return data;
 };
 
-const getSpace = async (spaceId: string): Promise<HostingSpace> => {
+const getSpace = async (spaceId) => {
   const { data } = await apiClient.get(`/hosting/spaces/${spaceId}`);
   return data;
 };
 
-export const useHostingSpaces = (userId: string) =>
+export const useHostingSpaces = (userId) =>
   useQuery({
     queryKey: ['hosting-spaces', userId],
     queryFn: () => getSpaces(userId),
     enabled: !!userId
   });
 
-export const useHostingSpaceDetail = (spaceId: string) =>
+export const useHostingSpaceDetail = (spaceId) =>
   useQuery({ queryKey: ['hosting-space', spaceId], queryFn: () => getSpace(spaceId), enabled: !!spaceId });
-
-export type { HostingFile, HostingSpace };

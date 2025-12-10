@@ -24,8 +24,8 @@ const mockDomains = [
     id: 'domain-1',
     name: 'example.com',
     userId: 'demo-user',
-    registrarProvider: 'cloudflare' as const,
-    status: 'active' as const,
+    registrarProvider: 'cloudflare',
+    status: 'active',
     verificationToken: 'token',
     createdAt: '2024-01-01T00:00:00.000Z',
     updatedAt: '2024-01-01T00:00:00.000Z',
@@ -51,7 +51,7 @@ const mockAnalytics = {
       {
         id: 'issue-1',
         title: 'Fix CLS on hero banner',
-        severity: 'critical' as const,
+        severity: 'critical',
         description: 'Large layout shifts detected on hero.',
         recommendation: 'Stabilise hero media dimensions.',
         impact: 'Improves engagement and conversions',
@@ -79,7 +79,7 @@ const mockAnalytics = {
     structuredData: [
       {
         schemaType: 'Organization',
-        status: 'valid' as const,
+        status: 'valid',
         notes: 'All required fields present.'
       }
     ],
@@ -96,8 +96,8 @@ const mockAnalytics = {
       {
         id: 'action-1',
         title: 'Ship CDN cache purge API',
-        status: 'in-progress' as const,
-        priority: 'high' as const,
+        status: 'in-progress',
+        priority: 'high',
         owner: 'Ops Guild',
         dueDate: '2024-01-15',
         impact: 'Reduces TTFB regressions across clients'
@@ -162,7 +162,7 @@ const mockAnalytics = {
       {
         source: 'newsletter',
         visits: 120,
-        type: 'referral' as const
+        type: 'referral'
       }
     ],
     topCountries: [
@@ -185,7 +185,7 @@ const mockAnalytics = {
 vi.mock('../src/services/apiClient', () => {
   return {
     apiClient: {
-      get: vi.fn((url: string) => {
+      get: vi.fn((url) => {
         if (url === '/hosting/spaces') {
           return Promise.resolve({ data: mockSpaces });
         }
@@ -214,7 +214,7 @@ vi.mock('../src/contexts/AuthContext', () => {
 
   return {
     useAuth: () => authValue,
-    AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>
+    AuthProvider: ({ children }) => <>{children}</>
   };
 });
 

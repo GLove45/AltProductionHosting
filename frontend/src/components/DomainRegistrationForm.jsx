@@ -1,28 +1,26 @@
-import { FormEvent, useState } from 'react';
+import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { DomainRegistrarProvider, Domain } from '../types/domain';
 import { registerDomain } from '../services/domainHooks';
 import { useAuth } from '../contexts/AuthContext';
 
-const registrarOptions: DomainRegistrarProvider[] = ['internal', 'namecheap', 'cloudflare'];
+const registrarOptions = ['internal', 'namecheap', 'cloudflare'];
 
 export const DomainRegistrationForm = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [domainName, setDomainName] = useState('');
-  const [registrarProvider, setRegistrarProvider] = useState<DomainRegistrarProvider>('internal');
-  const [error, setError] = useState<string | null>(null);
+  const [registrarProvider, setRegistrarProvider] = useState('internal');
+  const [error, setError] = useState(null);
 
   const mutation = useMutation({
-    mutationFn: (payload: { domainName: string; registrarProvider: DomainRegistrarProvider }) =>
-      registerDomain(payload),
-    onSuccess: (domain: Domain) => {
+    mutationFn: (payload) => registerDomain(payload),
+    onSuccess: (domain) => {
       setDomainName('');
       setError(null);
       queryClient.invalidateQueries({ queryKey: ['domains', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['domain-analytics', domain.id] });
     },
-    onError: (mutationError: unknown) => {
+    onError: (mutationError) => {
       if (mutationError instanceof Error) {
         setError(mutationError.message);
       } else {
@@ -35,7 +33,7 @@ export const DomainRegistrationForm = () => {
     return null;
   }
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     setError(null);
     mutation.mutate({ domainName, registrarProvider });
@@ -56,8 +54,7 @@ export const DomainRegistrationForm = () => {
       <p className="eyebrow">Domain onboarding</p>
       <h3>Register & verify</h3>
       <p className="form-lead">
-        Trigger the Python registrar agent to claim DNS, write nginx, request certbot, and wire AWStats
-        telemetry in one move.
+        Trigger the Python registrar agent to claim DNS, write nginx, request certbot, and wire AWStats telemetry in one move.
       </p>
       <form onSubmit={handleSubmit} className="domain-registration-form">
         <label>
@@ -72,10 +69,7 @@ export const DomainRegistrationForm = () => {
         </label>
         <label>
           Registrar provider
-          <select
-            value={registrarProvider}
-            onChange={(event) => setRegistrarProvider(event.target.value as DomainRegistrarProvider)}
-          >
+          <select value={registrarProvider} onChange={(event) => setRegistrarProvider(event.target.value)}>
             {registrarOptions.map((option) => (
               <option key={option} value={option}>
                 {option}

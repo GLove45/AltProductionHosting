@@ -6,7 +6,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint src --ext .ts,.tsx",
+    "lint": "eslint src --ext .js,.jsx",
     "test": "vitest run"
   },
   "dependencies": {
@@ -19,15 +19,13 @@
   "devDependencies": {
     "@testing-library/jest-dom": "^6.4.2",
     "@testing-library/react": "^16.0.1",
-    "@types/react": "^18.2.74",
-    "@types/react-dom": "^18.2.24",
     "@vitejs/plugin-react": "^4.2.1",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.6",
     "jsdom": "^24.1.0",
-    "typescript": "^5.4.5",
+    "prop-types": "^15.8.1",
     "vite": "^5.2.8",
     "vitest": "^1.6.0"
   }
