@@ -10,6 +10,7 @@ import { DomainAnalytics } from '../types/domain';
 import { useAuth } from '../contexts/AuthContext';
 import { DomainRegistrationForm } from '../components/DomainRegistrationForm';
 import { PasswordUpdateForm } from '../components/PasswordUpdateForm';
+import { ExperienceJourney } from '../components/ExperienceJourney';
 
 type DashboardPageProps = {
   devMode: boolean;
@@ -125,6 +126,8 @@ const DashboardPage = ({ devMode }: DashboardPageProps) => {
           </div>
         </div>
       </section>
+
+      <ExperienceJourney />
 
       <section className="spaces-grid">
         {spaces?.map((space) => (
