@@ -3,10 +3,10 @@ import { useParams } from 'react-router-dom';
 import { DevAssistant } from '../components/DevAssistant';
 import { useEditorTemplates } from '../services/editorHooks';
 
-const EditorPage = ({ devMode }: { devMode: boolean }) => {
+const EditorPage = ({ devMode }) => {
   const { spaceId } = useParams();
   const { data: templates } = useEditorTemplates();
-  const [selectedTemplate, setSelectedTemplate] = useState<string | undefined>();
+  const [selectedTemplate, setSelectedTemplate] = useState();
 
   const widgets = useMemo(() => {
     const template = templates?.find((item) => item.id === selectedTemplate);

@@ -6,17 +6,13 @@ import { useHostingSpaces } from '../services/hostingHooks';
 import { fetchDomainAnalytics, useUserDomains } from '../services/domainHooks';
 import { SeoServiceOverview } from '../components/SeoServiceOverview';
 import { DomainPerformancePanel } from '../components/DomainPerformancePanel';
-import { DomainAnalytics } from '../types/domain';
 import { useAuth } from '../contexts/AuthContext';
 import { DomainRegistrationForm } from '../components/DomainRegistrationForm';
 import { PasswordUpdateForm } from '../components/PasswordUpdateForm';
 import { ExperienceJourney } from '../components/ExperienceJourney';
+import { ExperienceModes } from '../components/ExperienceModes';
 
-type DashboardPageProps = {
-  devMode: boolean;
-};
-
-const DashboardPage = ({ devMode }: DashboardPageProps) => {
+const DashboardPage = ({ devMode, setDevMode }) => {
   const { user, isLoading: authLoading } = useAuth();
   const userId = user?.id ?? '';
   const { data: spaces } = useHostingSpaces(userId);
@@ -29,14 +25,14 @@ const DashboardPage = ({ devMode }: DashboardPageProps) => {
   const analyticsQueries = useQueries({
     queries:
       domains?.map((domain) => ({
-        queryKey: ['domain-analytics', domain.id] as const,
+        queryKey: ['domain-analytics', domain.id],
         queryFn: () => fetchDomainAnalytics(domain.id),
         enabled: !!domain.id
       })) ?? []
   });
 
   const aggregatedAnalytics = useMemo(() => {
-    const analytics: DomainAnalytics[] = [];
+    const analytics = [];
     analyticsQueries.forEach((query) => {
       if (query.data) {
         analytics.push(query.data);
@@ -76,8 +72,8 @@ const DashboardPage = ({ devMode }: DashboardPageProps) => {
           <p className="eyebrow">Alt Production Labs · Sovereign Hosting</p>
           <h1>Domain control dashboard</h1>
           <p className="hero-lead">
-            Register domains, auto-provision nginx, and keep bot policy, TLS, and analytics unified.
-            Built for teams shipping on Raspberry Pi 5 clusters without sacrificing security.
+            Register domains, auto-provision nginx, and keep bot policy, TLS, and analytics unified. Built for teams shipping on
+            Raspberry Pi 5 clusters without sacrificing security.
           </p>
           <div className="hero-actions">
             <Link to="/" className="pill primary">Start free scan</Link>
@@ -127,6 +123,8 @@ const DashboardPage = ({ devMode }: DashboardPageProps) => {
         </div>
       </section>
 
+      <ExperienceModes devMode={devMode} onToggleDevMode={setDevMode} />
+
       <ExperienceJourney />
 
       <section className="spaces-grid">
@@ -154,24 +152,23 @@ const DashboardPage = ({ devMode }: DashboardPageProps) => {
             <p className="eyebrow">01</p>
             <h3>Real-time Sentinel</h3>
             <p>
-              Models learn normal behaviour per site and surface anomalies fast. Nginx configs, AWStats, and
-              consent guard stay synchronised across nodes.
+              Models learn normal behaviour per site and surface anomalies fast. Nginx configs, AWStats, and consent guard stay
+              synchronised across nodes.
             </p>
           </article>
           <article className="security-card">
             <p className="eyebrow">02</p>
             <h3>Human-in-the-loop</h3>
             <p>
-              Specialists validate findings to reduce false positives while coaching the model on what
-              matters for your fleet.
+              Specialists validate findings to reduce false positives while coaching the model on what matters for your fleet.
             </p>
           </article>
           <article className="security-card">
             <p className="eyebrow">03</p>
             <h3>Resilience & recovery</h3>
             <p>
-              If incidents are detected, affected services are isolated and restored with clear, audit-friendly
-              summaries for customers.
+              If incidents are detected, affected services are isolated and restored with clear, audit-friendly summaries for
+              customers.
             </p>
           </article>
         </div>
@@ -187,51 +184,53 @@ const DashboardPage = ({ devMode }: DashboardPageProps) => {
           <div className="stacked-card">
             <h3>Registrar automation</h3>
             <p>
-              Python agents run on the Pi 5 cluster to write nginx server blocks, request TLS via certbot,
-              and keep AWStats telemetry flowing into the dashboard.
+              Python agents run on the Pi 5 cluster to write nginx server blocks, request TLS via certbot, and keep AWStats
+              telemetry flowing into the dashboard.
             </p>
             <ul className="feature-list">
               <li>Automatic webroot creation per domain</li>
               <li>Consent-check endpoints for bot policy enforcement</li>
               <li>One-click nginx reload with validation</li>
+              <li>SSL renewals tracked in the same timeline</li>
+              <li>Regulator-friendly audit exports</li>
+            </ul>
+          </div>
+          <div className="stacked-card">
+            <h3>Incident response</h3>
+            <p>
+              Synthetic monitors, bot anomaly detection, and AWStats ingestion keep you ready to isolate bad actors and recover
+              quickly.
+            </p>
+            <ul className="feature-list">
+              <li>Regional isolation and auto-mitigation hooks</li>
+              <li>Runbooks with inline context</li>
+              <li>Timeline of risk events with rollback links</li>
             </ul>
           </div>
         </div>
       </section>
 
-      <SeoServiceOverview analytics={aggregatedAnalytics} loading={isLoadingDomains || analyticsLoading} />
-
-      <section className="domain-analytics-section" id="analytics">
+      <section className="analytics-grid">
         <header className="section-header">
           <h2>Domain performance studio</h2>
-          <p>
-            AWStats telemetry fused with SEO diagnostics for each property. Use this view to prioritise
-            crawl fixes, monitor consent compliance, and celebrate traffic wins.
-          </p>
+          <p>Live SEO, AWStats, and anomaly intelligence per domain.</p>
         </header>
-
-        {isLoadingDomains && <p className="loading-state">Loading domain inventory…</p>}
-        {domainError && (
-          <p className="error-state">
-            Domains could not be retrieved right now. Refresh the page or verify your account access.
-          </p>
-        )}
-
-        <div className="domain-grid">
-          {(domains ?? []).map((domain, index) => {
-            const query = analyticsQueries[index];
-            return (
-              <DomainPerformancePanel
-                key={domain.id}
-                domain={domain}
-                analytics={query?.data}
-                isLoading={query?.isLoading ?? false}
-                isError={query?.isError ?? false}
-              />
-            );
-          })}
+        {domainError && <p className="error-state">Unable to load domains right now.</p>}
+        {isLoadingDomains && <p className="loading-state">Loading domains…</p>}
+        <div className="analytics-panels">
+          {(domains ?? []).map((domain) => (
+            <DomainPerformancePanel
+              key={domain.id}
+              domain={domain}
+              analytics={aggregatedAnalytics.find((item) => item.domainId === domain.id)}
+              isLoading={analyticsLoading}
+              isError={analyticsQueries.some((query) => query.isError)}
+            />
+          ))}
         </div>
       </section>
+
+      <SeoServiceOverview analytics={aggregatedAnalytics} loading={analyticsLoading} />
     </DevAssistant>
   );
 };

@@ -1,5 +1,4 @@
 import {
-  ReactNode,
   createContext,
   useCallback,
   useContext,
@@ -9,24 +8,13 @@ import {
 } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../services/apiClient';
-import { AuthTokens, UserProfile } from '../types/auth';
 import { login as loginRequest, fetchProfile, changePassword } from '../services/authApi';
 
-type AuthContextValue = {
-  user: UserProfile | null;
-  tokens: AuthTokens | null;
-  isLoading: boolean;
-  login: (identifier: string, password: string) => Promise<void>;
-  logout: () => void;
-  refreshProfile: () => Promise<void>;
-  updatePassword: (currentPassword: string, newPassword: string) => Promise<void>;
-};
-
-const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+const AuthContext = createContext(undefined);
 
 const AUTH_STORAGE_KEY = 'alt-hosting-auth';
 
-const storeTokens = (tokens: AuthTokens | null) => {
+const storeTokens = (tokens) => {
   if (tokens) {
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(tokens));
     apiClient.defaults.headers.common.Authorization = `Bearer ${tokens.accessToken}`;
@@ -36,14 +24,14 @@ const storeTokens = (tokens: AuthTokens | null) => {
   }
 };
 
-const loadStoredTokens = (): AuthTokens | null => {
+const loadStoredTokens = () => {
   const raw = localStorage.getItem(AUTH_STORAGE_KEY);
   if (!raw) {
     return null;
   }
 
   try {
-    const parsed = JSON.parse(raw) as AuthTokens;
+    const parsed = JSON.parse(raw);
     apiClient.defaults.headers.common.Authorization = `Bearer ${parsed.accessToken}`;
     return parsed;
   } catch (error) {
@@ -52,15 +40,11 @@ const loadStoredTokens = (): AuthTokens | null => {
   }
 };
 
-type AuthProviderProps = {
-  children: ReactNode;
-};
-
-export const AuthProvider = ({ children }: AuthProviderProps) => {
+export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
-  const [tokens, setTokens] = useState<AuthTokens | null>(() => loadStoredTokens());
-  const [user, setUser] = useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(!!tokens);
+  const [tokens, setTokens] = useState(() => loadStoredTokens());
+  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(!!tokens);
 
   useEffect(() => {
     if (!tokens) {
@@ -84,7 +68,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, [tokens]);
 
   const login = useCallback(
-    async (identifier: string, password: string) => {
+    async (identifier, password) => {
       const authTokens = await loginRequest(identifier, password);
       setTokens(authTokens);
       storeTokens(authTokens);
@@ -108,15 +92,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setUser(profile);
   }, []);
 
-  const updatePassword = useCallback(
-    async (currentPassword: string, newPassword: string) => {
-      const profile = await changePassword({ currentPassword, newPassword });
-      setUser(profile);
-    },
-    []
-  );
+  const updatePassword = useCallback(async (currentPassword, newPassword) => {
+    const profile = await changePassword({ currentPassword, newPassword });
+    setUser(profile);
+  }, []);
 
-  const value = useMemo<AuthContextValue>(
+  const value = useMemo(
     () => ({ user, tokens, isLoading, login, logout, refreshProfile, updatePassword }),
     [user, tokens, isLoading, login, logout, refreshProfile, updatePassword]
   );

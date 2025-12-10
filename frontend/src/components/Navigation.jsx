@@ -1,13 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import PropTypes from 'prop-types';
 import { useAuth } from '../contexts/AuthContext';
 
-type NavigationProps = {
-  devMode: boolean;
-  onToggleDevMode: (value: boolean) => void;
-};
-
-export const Navigation = ({ devMode, onToggleDevMode }: NavigationProps) => {
+export const Navigation = ({ devMode, onToggleDevMode }) => {
   const location = useLocation();
   const { user, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -44,6 +40,9 @@ export const Navigation = ({ devMode, onToggleDevMode }: NavigationProps) => {
         </Link>
         <a href="#security-stack">Security</a>
         <a href="#analytics">Analytics</a>
+        <span className="hotkey-hint desktop-only" aria-label="Command palette">
+          ⌘/Ctrl + K
+        </span>
         {user ? (
           <>
             <span className="user-pill" aria-label="Logged in user">
@@ -77,4 +76,9 @@ export const Navigation = ({ devMode, onToggleDevMode }: NavigationProps) => {
       </nav>
     </header>
   );
+};
+
+Navigation.propTypes = {
+  devMode: PropTypes.bool.isRequired,
+  onToggleDevMode: PropTypes.func.isRequired
 };
