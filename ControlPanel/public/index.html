@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AltProductionHosting Control Panel</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="app__header">
+        <div>
+          <h1>AltProductionHosting Control Panel</h1>
+          <p>Secure cPanel-like orchestration with passkey/YubiKey authentication.</p>
+        </div>
+        <div class="app__session">
+          <span id="sessionStatus">Checking session...</span>
+          <button id="logoutButton" class="button button--ghost" type="button">Log out</button>
+        </div>
+      </header>
+
+      <section class="card card--auth">
+        <div>
+          <h2>Passkey / YubiKey Login</h2>
+          <p>Register or authenticate with a hardware-backed passkey before managing packages.</p>
+        </div>
+        <form id="authForm" class="auth-form">
+          <label>
+            Username
+            <input id="username" name="username" type="text" autocomplete="username" required />
+          </label>
+          <label>
+            Display name
+            <input id="displayName" name="displayName" type="text" autocomplete="name" />
+          </label>
+          <div class="auth-actions">
+            <button class="button" id="registerButton" type="button">Register passkey</button>
+            <button class="button button--secondary" id="loginButton" type="button">Sign in</button>
+          </div>
+          <p id="authMessage" class="hint"></p>
+        </form>
+      </section>
+
+      <section class="card">
+        <div class="card__header">
+          <h2>Package Orchestration</h2>
+          <div class="search">
+            <input id="packageSearch" type="search" placeholder="Search packages" />
+          </div>
+        </div>
+        <div id="packages" class="packages"></div>
+      </section>
+
+      <section class="card">
+        <h2>Orchestration Status</h2>
+        <div class="status-grid">
+          <div>
+            <h3>Service Controls</h3>
+            <p>Install, remove, update, or restart services directly from the panel.</p>
+          </div>
+          <div>
+            <h3>System Modifications</h3>
+            <p>Commands run in dry-run mode unless <code>CONTROL_PANEL_APPLY=true</code> is set.</p>
+          </div>
+          <div>
+            <h3>Audit Visibility</h3>
+            <p>Responses include command output for auditing and scripting integration.</p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
