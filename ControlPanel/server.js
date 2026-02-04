@@ -11,6 +11,8 @@ import {
   verifyRegistrationResponse,
   verifyAuthenticationResponse,
 } from '@simplewebauthn/server';
+import { readState, updateState } from './orchestrator/stateStore.js';
+import { enqueueJob, getJob } from './orchestrator/jobQueue.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -89,6 +91,125 @@ app.get('/api/packages', requireAuth, (req, res) => {
 
 app.get('/api/session', (req, res) => {
   res.json({ authenticated: Boolean(req.session?.authenticated), user: req.session?.user || null });
+});
+
+app.get('/api/state', requireAuth, async (req, res) => {
+  const state = await readState();
+  res.json(state);
+});
+
+app.post('/api/tenants', requireAuth, async (req, res) => {
+  const { name, planId } = req.body;
+  if (!name) {
+    res.status(400).json({ error: 'Tenant name is required.' });
+    return;
+  }
+  const tenantId = uuidv4();
+  const state = await updateState((current) => {
+    const plan = planId || current.plans[0]?.id || 'starter';
+    const tenant = {
+      id: tenantId,
+      name,
+      planId: plan,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+      domains: [],
+    };
+    current.tenants.push(tenant);
+    return current;
+  });
+
+  const job = await enqueueJob({
+    action: 'tenant.provision',
+    payload: { tenantId },
+    requestedBy: req.session?.user?.username || 'unknown',
+  });
+
+  res.json({ tenant: state.tenants.find((entry) => entry.id === tenantId), job });
+});
+
+app.post('/api/domains', requireAuth, async (req, res) => {
+  const { tenantId, name, primaryIp, adminEmail, phpSocket, docroot } = req.body;
+  if (!tenantId || !name) {
+    res.status(400).json({ error: 'tenantId and domain name are required.' });
+    return;
+  }
+  const currentState = await readState();
+  const tenantExists = currentState.tenants.some((entry) => entry.id === tenantId);
+  if (!tenantExists) {
+    res.status(404).json({ error: 'Tenant not found.' });
+    return;
+  }
+  const domainId = uuidv4();
+  const state = await updateState((current) => {
+    const tenant = current.tenants.find((entry) => entry.id === tenantId);
+    const domain = {
+      id: domainId,
+      tenantId,
+      name,
+      primaryIp,
+      adminEmail,
+      phpSocket,
+      docroot,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+    };
+    current.domains.push(domain);
+    tenant.domains = tenant.domains || [];
+    tenant.domains.push(domainId);
+    return current;
+  });
+
+  const job = await enqueueJob({
+    action: 'domain.provision',
+    payload: { domainId },
+    requestedBy: req.session?.user?.username || 'unknown',
+  });
+
+  res.json({ domain: state.domains.find((entry) => entry.id === domainId), job });
+});
+
+app.post('/api/certificates', requireAuth, async (req, res) => {
+  const { domainId } = req.body;
+  if (!domainId) {
+    res.status(400).json({ error: 'domainId is required.' });
+    return;
+  }
+  const currentState = await readState();
+  const domain = currentState.domains.find((entry) => entry.id === domainId);
+  if (!domain) {
+    res.status(404).json({ error: 'Domain not found.' });
+    return;
+  }
+  const certificateId = uuidv4();
+  const state = await updateState((current) => {
+    const certificate = {
+      id: certificateId,
+      domainId,
+      domain: domain.name,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+    };
+    current.certificates.push(certificate);
+    return current;
+  });
+
+  const job = await enqueueJob({
+    action: 'cert.issue',
+    payload: { certificateId },
+    requestedBy: req.session?.user?.username || 'unknown',
+  });
+
+  res.json({ certificate: state.certificates.find((entry) => entry.id === certificateId), job });
+});
+
+app.get('/api/jobs/:id', requireAuth, async (req, res) => {
+  const job = await getJob(req.params.id);
+  if (!job) {
+    res.status(404).json({ error: 'Job not found.' });
+    return;
+  }
+  res.json(job);
 });
 
 app.post('/api/register/options', (req, res) => {
@@ -286,28 +407,16 @@ app.post('/api/packages/:name/action', requireAuth, async (req, res) => {
     return;
   }
 
-  const command = action === 'restart'
-    ? ['systemctl', 'restart', name]
-    : ['apt-get', '-y', action === 'remove' ? 'remove' : 'install', name];
+  const job = await enqueueJob({
+    action: 'package.action',
+    payload: { name, action, apply: APPLY_CHANGES },
+    requestedBy: req.session?.user?.username || 'unknown',
+  });
 
-  if (!APPLY_CHANGES) {
-    res.json({
-      ok: true,
-      dryRun: true,
-      command: command.join(' '),
-      message: 'Set CONTROL_PANEL_APPLY=true to execute system changes.',
-    });
-    return;
-  }
-
-  const { execFile } = await import('child_process');
-
-  execFile(command[0], command.slice(1), { timeout: 1000 * 60 * 5 }, (error, stdout, stderr) => {
-    if (error) {
-      res.status(500).json({ ok: false, error: error.message, stderr, stdout });
-      return;
-    }
-    res.json({ ok: true, stdout, stderr });
+  res.json({
+    ok: true,
+    jobId: job.id,
+    message: `Job queued for ${action} ${name}.`,
   });
 });
 

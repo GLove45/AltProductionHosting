@@ -1,0 +1,21 @@
+{
+  "metadata": {
+    "version": 1,
+    "updatedAt": "1970-01-01T00:00:00.000Z"
+  },
+  "tenants": [],
+  "domains": [],
+  "certificates": [],
+  "plans": [
+    {
+      "id": "starter",
+      "name": "Starter",
+      "quotas": {
+        "storageGb": 10,
+        "bandwidthGb": 100,
+        "databases": 2,
+        "mailboxes": 5
+      }
+    }
+  ]
+}
