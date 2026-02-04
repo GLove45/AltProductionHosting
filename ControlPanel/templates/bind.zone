@@ -1,0 +1,14 @@
+$TTL 3600
+@   IN  SOA ns1.{{zone}}. {{admin_email}}. (
+        2024010101 ; serial
+        3600       ; refresh
+        1800       ; retry
+        604800     ; expire
+        3600       ; minimum
+)
+
+    IN  NS  ns1.{{zone}}.
+    IN  NS  ns2.{{zone}}.
+
+@   IN  A   {{primary_ip}}
+www IN  A   {{primary_ip}}

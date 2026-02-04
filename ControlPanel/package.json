@@ -6,7 +6,9 @@
   "description": "cPanel-like control panel with WebAuthn passkey/YubiKey auth.",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "agent": "node agent/agent.js",
+    "reconcile": "node orchestrator/reconciler.js"
   },
   "dependencies": {
     "@simplewebauthn/server": "^9.0.0",
